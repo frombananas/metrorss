@@ -93,7 +93,7 @@ app.use(async (req, res, next) => {
         const ip = getClientIP(req);
         const ban = blockedIPs[ip];
         if (ban && ban.until > Date.now()) {
-            return res.status(403).json({ error: 'Your IP is banned', reason: ban.reason || undefined });
+            return res.status(403).json({ error: 'вы забанены', reason: ban.reason || 'без причины' });
         }
     } catch (e) {}
     next();
