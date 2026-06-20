@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>metroRSS — админ</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.png">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        :root { --win-bg: #000000; --win-fg: #ffffff; --accent: #744da9; --ease-wp: cubic-bezier(0.1, 0.9, 0.2, 1); }
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; user-select: none; }
+        body { background: var(--win-bg); color: var(--win-fg); font-family: 'Segoe WP', 'Segoe UI', sans-serif; padding: calc(40px + env(safe-area-inset-top, 0px)) 24px 40px 24px; }
+        .page-header { margin-bottom: 35px; }
+        .page-title { font-size: 54px; font-weight: 200; letter-spacing: -2px; display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap; }
+        .page-subtitle { font-size: 16px; color: var(--accent); text-transform: uppercase; font-weight: 600; letter-spacing: 1px; }
+        .back-link { color: var(--accent); text-decoration: none; font-size: 16px; font-weight: 400; text-transform: lowercase; border: 2px solid var(--accent); padding: 10px 16px; margin-top: -12px; transition: all 0.15s ease; display: inline-flex; align-items: center; gap: 8px; }
+        .back-link:hover { color: white; background: var(--accent); }
+        .login-box { border: 2px solid var(--accent); padding: 24px; background: #0a0a0a; max-width: 400px; margin: 0 auto; animation: wpListIn 0.5s var(--ease-wp) both; }
+        .login-box h3 { font-size: 24px; font-weight: 200; text-transform: lowercase; margin-bottom: 15px; }
+        .login-box input { display: block; width: 100%; margin-bottom: 15px; background: #111; color: #fff; border: 2px solid #444; padding: 12px; font-size: 16px; font-family: inherit; font-weight: 300; transition: border-color 0.2s; user-select: text; }
+        .login-box input:focus { outline: none; border-color: var(--win-fg); }
+        .login-btn { background: var(--accent); border: 2px solid var(--accent); color: white; padding: 10px 25px; font-size: 15px; font-weight: 400; cursor: pointer; text-transform: lowercase; transition: all 0.15s ease; }
+        .login-btn:hover { background: transparent; color: var(--accent); }
+        .login-error { color: #e51400; font-size: 13px; margin-top: 10px; display: none; }
+        .dashboard { display: none; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 30px; }
+        .stat-card { border: 2px solid var(--accent); padding: 20px; background: #0a0a0a; text-align: center; }
+        .stat-card .num { font-size: 36px; font-weight: 200; color: var(--accent); }
+        .stat-card .label { font-size: 13px; color: #999; text-transform: lowercase; margin-top: 6px; }
+        .tab-bar { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+        .tab-btn { background: none; border: 2px solid #333; color: white; padding: 8px 18px; font-size: 14px; cursor: pointer; font-family: inherit; text-transform: lowercase; transition: all 0.2s; }
+        .tab-btn:hover, .tab-btn.active { border-color: var(--accent); color: var(--accent); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .post-item, .ban-item { border: 1px solid #222; padding: 14px; margin-bottom: 8px; background: #050505; display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; animation: wpListIn 0.3s var(--ease-wp) both; }
+        .post-item .info, .ban-item .info { flex: 1; }
+        .post-item .title { font-size: 16px; font-weight: 300; color: var(--accent); }
+        .post-item .meta { font-size: 12px; color: #666; margin-top: 4px; }
+        .ban-item .ip { font-size: 14px; color: var(--accent); font-weight: 300; }
+        .ban-item .reason { font-size: 12px; color: #999; margin-top: 4px; }
+        .del-btn, .unban-btn { background: none; border: 1px solid #e51400; color: #e51400; padding: 4px 12px; font-size: 12px; cursor: pointer; font-family: inherit; transition: all 0.2s; }
+        .del-btn:hover, .unban-btn:hover { background: #e51400; color: white; }
+        .ban-form { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+        .ban-form input { flex: 1; min-width: 120px; background: #111; color: #fff; border: 1px solid #333; padding: 8px 12px; font-size: 13px; font-family: inherit; user-select: text; }
+        .ban-form input:focus { outline: none; border-color: var(--accent); }
+        .ban-form button { background: var(--accent); border: none; color: white; padding: 8px 16px; cursor: pointer; font-family: inherit; font-size: 13px; text-transform: lowercase; }
+        .loader { text-align: center; padding: 40px; color: #666; }
+        @keyframes wpListIn { from { transform: translateX(50px) rotateY(-15deg); opacity: 0; } to { transform: translateX(0) rotateY(0deg); opacity: 1; } }
+    </style>
+</head>
+<body>
+    <div class="page-header">
+        <div class="page-subtitle">metroRSS</div>
+        <div class="page-title">админ <a href="/" class="back-link"><i class="material-icons" style="font-size:18px;">arrow_back</i>назад</a></div>
+    </div>
+
+    <div class="login-box" id="login-box">
+        <h3>вход</h3>
+        <input id="login-pass" type="password" placeholder="пароль">
+        <button class="login-btn" id="login-btn">войти</button>
+        <div class="login-error" id="login-error">неверный пароль</div>
+    </div>
+
+    <div class="dashboard" id="dashboard">
+        <div class="stats-grid" id="stats"></div>
+
+        <div class="tab-bar">
+            <button class="tab-btn active" data-tab="posts">посты</button>
+            <button class="tab-btn" data-tab="bans">баны</button>
+        </div>
+
+        <div class="tab-content active" id="tab-posts">
+            <div id="posts-list"></div>
+        </div>
+
+        <div class="tab-content" id="tab-bans">
+            <div class="ban-form">
+                <input id="ban-ip" placeholder="IP адрес">
+                <input id="ban-reason" placeholder="причина (опционально)">
+                <button id="ban-btn">забанить</button>
+            </div>
+            <div id="bans-list"></div>
+        </div>
+    </div>
+
+    <script>
+        let auth = '';
+
+        document.getElementById('login-btn').addEventListener('click', login);
+        document.getElementById('login-pass').addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
+
+        function login() {
+            const pass = document.getElementById('login-pass').value;
+            auth = 'Basic ' + btoa('admin:' + pass);
+            fetch('/api/admin/stats', { headers: { 'Authorization': auth } })
+                .then(r => { if (!r.ok) throw new Error(); return r.json(); })
+                .then(() => {
+                    document.getElementById('login-box').style.display = 'none';
+                    document.getElementById('dashboard').style.display = 'block';
+                    loadStats(); loadPosts(); loadBans();
+                })
+                .catch(() => {
+                    document.getElementById('login-error').style.display = 'block';
+                    auth = '';
+                });
+        }
+
+        function api(path, opts = {}) {
+            opts.headers = opts.headers || {};
+            opts.headers['Authorization'] = auth;
+            return fetch(path, opts).then(r => { if (!r.ok) throw new Error(); return r.json(); });
+        }
+
+        function loadStats() {
+            api('/api/admin/stats').then(d => {
+                document.getElementById('stats').innerHTML = `
+                    <div class="stat-card"><div class="num">${d.postsCount}</div><div class="label">постов</div></div>
+                    <div class="stat-card"><div class="num">${d.totalLikes}</div><div class="label">лайков</div></div>
+                    <div class="stat-card"><div class="num">${d.totalComments}</div><div class="label">комментариев</div></div>
+                    <div class="stat-card"><div class="num">${d.bannedIPsCount}</div><div class="label">забанено IP</div></div>
+                `;
+            });
+        }
+
+        function loadPosts() {
+            const el = document.getElementById('posts-list');
+            el.innerHTML = '<div class="loader">загрузка...</div>';
+            api('/api/admin/posts').then(posts => {
+                if (!posts.length) { el.innerHTML = '<p style="color:#666;">постов нет</p>'; return; }
+                el.innerHTML = posts.map(p => `
+                    <div class="post-item">
+                        <div class="info">
+                            <div class="title">${p.title || 'без заголовка'}</div>
+                            <div class="meta">${p.text}… &middot; ${new Date(p.date).toLocaleDateString('ru')} &middot; ❤ ${p.likes} &middot; 💬 ${p.commentsCount}</div>
+                        </div>
+                        <button class="del-btn" data-id="${p.id}">удалить</button>
+                    </div>
+                `).join('');
+                el.querySelectorAll('.del-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        if (!confirm('Удалить пост?')) return;
+                        api('/api/admin/posts/' + btn.dataset.id, { method: 'DELETE' }).then(() => { loadPosts(); loadStats(); });
+                    });
+                });
+            }).catch(() => { el.innerHTML = '<p style="color:#e51400;">ошибка загрузки</p>'; });
+        }
+
+        function loadBans() {
+            const el = document.getElementById('bans-list');
+            el.innerHTML = '<div class="loader">загрузка...</div>';
+            api('/api/admin/banned').then(bans => {
+                const keys = Object.keys(bans);
+                if (!keys.length) { el.innerHTML = '<p style="color:#666;">банов нет</p>'; return; }
+                el.innerHTML = keys.map(ip => {
+                    const b = bans[ip];
+                    return `
+                        <div class="ban-item">
+                            <div class="info">
+                                <div class="ip">${ip}</div>
+                                <div class="reason">${b.reason || 'без причины'} &middot; до ${new Date(b.until).toLocaleDateString('ru')}</div>
+                            </div>
+                            <button class="unban-btn" data-ip="${ip}">разбанить</button>
+                        </div>
+                    `;
+                }).join('');
+                el.querySelectorAll('.unban-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        api('/api/admin/ban/' + encodeURIComponent(btn.dataset.ip), { method: 'DELETE' }).then(() => { loadBans(); loadStats(); });
+                    });
+                });
+            }).catch(() => { el.innerHTML = '<p style="color:#e51400;">ошибка загрузки</p>'; });
+        }
+
+        document.getElementById('ban-btn').addEventListener('click', () => {
+            const ip = document.getElementById('ban-ip').value.trim();
+            const reason = document.getElementById('ban-reason').value.trim();
+            if (!ip) return;
+            api('/api/admin/ban', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ip, reason }) })
+                .then(() => { document.getElementById('ban-ip').value = ''; document.getElementById('ban-reason').value = ''; loadBans(); loadStats(); });
+        });
+
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+                btn.classList.add('active');
+                document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>

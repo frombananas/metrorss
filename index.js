@@ -71,7 +71,7 @@ function getClientIP(req) {
     return (req.headers['x-forwarded-for'] || '').split(',')[0].trim() || req.socket.remoteAddress || 'unknown';
 }
 
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'mR55_2026!Admin#Secure';
 
 function adminAuth(req, res, next) {
     const auth = req.headers.authorization;
