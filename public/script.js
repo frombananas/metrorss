@@ -342,3 +342,60 @@ async function loadEmergency() {
     } catch(e) {}
 }
 loadEmergency();
+
+let currentFeed = 'all';
+
+document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', async function() {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        currentFeed = this.dataset.feed;
+        if (currentFeed === 'all') {
+            await loadNews(true);
+        } else if (currentFeed === 'liked') {
+            await loadLiked();
+        }
+    });
+});
+
+async function loadLiked() {
+    const feed = document.getElementById('feed');
+    feed.innerHTML = '<img class="loader-gif" src="https://media.tenor.com/ptkoPmx8XAkAAAAi/windows-loading.gif">';
+    try {
+        const res = await fetch('/api/liked-by-device');
+        const data = await res.json();
+        if (!Array.isArray(data) || data.length === 0) {
+            feed.innerHTML = '<p style="color:#666;font-style:italic;font-weight:300;">вы ещё не лайкали посты.</p>';
+            return;
+        }
+        feed.innerHTML = data.map((p, i) => {
+            const id = p && p.id ? p.id : '';
+            const title = p && p.title ? String(p.title).toLowerCase() : 'без заголовка';
+            const text = p && p.text ? String(p.text) : '';
+            const likes = p && typeof p.likes === 'number' ? p.likes : 0;
+            const comments = p && Array.isArray(p.comments) ? p.comments : [];
+            return '<div class="post" style="animation-delay:' + (i*0.05) + 's" data-id="' + id + '">' +
+                '<h2>' + title + '</h2><p>' + text + '</p>' +
+                '<div class="bar">' +
+                    '<button class="like-btn" data-id="' + id + '">' +
+                        '<i class="material-icons">favorite_border</i>' +
+                        '<span class="lc">' + likes + '</span>' +
+                    '</button>' +
+                    '<button class="cmt-btn" data-id="' + id + '">' +
+                        '<i class="material-icons">chat_bubble_outline</i>' +
+                        '<span>' + comments.length + '</span>' +
+                    '</button>' +
+                '</div>' +
+                '<div class="comments">' +
+                    '<div class="cmt-list">' + comments.map(c =>
+                        '<div class="c"><span class="cd">' + new Date(c.date).toLocaleDateString('ru') + '</span>' + c.text + '</div>'
+                    ).join('') + '</div>' +
+                    '<div class="cmt-form"><input class="cmt-input" placeholder="комментарий..."><button class="cmt-send"><i class="material-icons">send</i></button></div>' +
+                '</div>' +
+            '</div>';
+        }).join('');
+        attachListeners();
+    } catch (e) {
+        feed.innerHTML = '<p style="color:#e51400;font-weight:300;">ошибка загрузки.</p>';
+    }
+}

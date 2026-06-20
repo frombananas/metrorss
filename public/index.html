@@ -54,6 +54,10 @@
         .emergency-banner { border: 2px solid #e51400; padding: 16px; margin-bottom: 20px; background: #0a0505; animation: wpListIn 0.5s var(--ease-wp) both; display: none; }
         .emergency-banner .label { color: #e51400; font-size: 11px; text-transform: uppercase; font-weight: 600; letter-spacing: 1px; }
         .emergency-banner .text { color: #fff; font-size: 15px; font-weight: 300; margin-top: 6px; line-height: 1.5; white-space: pre-wrap; word-wrap: break-word; }
+        .tab-bar { display: flex; gap: 0; margin-bottom: 20px; border-bottom: 2px solid #222; }
+        .tab-btn { background: none; border: none; color: #666; padding: 10px 20px; font-size: 15px; font-family: inherit; font-weight: 300; cursor: pointer; text-transform: lowercase; transition: all 0.2s; border-bottom: 2px solid transparent; margin-bottom: -2px; }
+        .tab-btn:hover { color: #aaa; }
+        .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
     </style>
 </head>
 <body>
@@ -73,7 +77,10 @@
         <div class="label">📢 экстренная новость</div>
         <div class="text" id="emergency-text"></div>
     </div>
-    <div class="feed-header">текущие публикации</div>
+    <div class="tab-bar">
+        <button class="tab-btn active" data-feed="all">все</button>
+        <button class="tab-btn" data-feed="liked">мои лайки</button>
+    </div>
     <div id="feed"></div>
     <script src="/script.js"></script>
 </body>

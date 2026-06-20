@@ -459,6 +459,18 @@ app.get('/api/posts', async (req, res) => {
     }
 });
 
+app.get('/api/liked-by-device', async (req, res) => {
+    try {
+        const did = getDeviceID(req);
+        if (!did) return res.json([]);
+        const likedIds = (await kv.get('likedByDevice:' + did)) || [];
+        const posts = await getPosts();
+        res.json(likedIds.map(id => posts.find(p => p.id === id)).filter(Boolean).reverse());
+    } catch (e) {
+        res.status(500).json({ error: 'Failed' });
+    }
+});
+
 app.post('/api/posts', async (req, res) => {
     try {
         const ip = getClientIP(req);
@@ -527,6 +539,13 @@ app.post('/api/posts/:id/like', async (req, res) => {
         post.likedBy.push(did);
         post.likes = (post.likes || 0) + 1;
         await kv.set('posts', posts.slice(0, 500));
+
+        const likedByDevice = (await kv.get('likedByDevice:' + did)) || [];
+        if (!likedByDevice.includes(post.id)) {
+            likedByDevice.push(post.id);
+            await kv.set('likedByDevice:' + did, likedByDevice.slice(-500));
+        }
+
         res.json({ likes: post.likes });
     } catch (e) {
         res.status(500).json({ error: 'Like failed' });
