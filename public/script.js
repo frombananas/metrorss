@@ -1,11 +1,30 @@
 const API = "/api/posts";
 
+function hashStr(s) {
+    let h = 0;
+    for (let i = 0; i < s.length; i++) { h = ((h << 5) - h) + s.charCodeAt(i); h |= 0; }
+    return Math.abs(h).toString(36);
+}
+
 function getDeviceID() {
-    let id = localStorage.getItem('_did');
+    let id = localStorage.getItem('_did') || sessionStorage.getItem('_did');
     if (!id) {
-        id = 'd_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8);
-        localStorage.setItem('_did', id);
+        const fp = [navigator.userAgent, screen.width + 'x' + screen.height, screen.colorDepth, navigator.language, Intl.DateTimeFormat().resolvedOptions().timeZone].join('|');
+        id = 'd_' + hashStr(fp);
     }
+    try { localStorage.setItem('_did', id); } catch(e) {}
+    try { sessionStorage.setItem('_did', id); } catch(e) {}
+    try {
+        const req = indexedDB.open('_did_db', 1);
+        req.onupgradeneeded = () => req.result.createObjectStore('d', { keyPath: 'k' });
+        req.onsuccess = () => {
+            const tx = req.result.transaction('d', 'readwrite');
+            const store = tx.objectStore('d');
+            store.get('id').onsuccess = (e) => {
+                if (!e.target.result) store.put({ k: 'id', v: id });
+            };
+        };
+    } catch(e) {}
     return id;
 }
 
