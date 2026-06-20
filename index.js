@@ -176,9 +176,64 @@ app.use(async (req, res, next) => {
 
 app.use((req, res, next) => {
     const ua = (req.headers['user-agent'] || '').toLowerCase();
-    if (ua.includes('curl') || ua.includes('wget') || ua.includes('httpie') || ua.includes('python-requests') || ua.includes('go-http-client') || ua.includes('okhttp')) {
+    if (ua.includes('curl') || ua.includes('wget') || ua.includes('httpie') || ua.includes('python-requests') || ua.includes('go-http-client') || ua.includes('okhttp') || ua.includes('nsis') || ua.includes('powershell') || ua.includes('.net')) {
         return res.status(403).json({ error: 'Браузеры и приложения только' });
     }
+    next();
+});
+
+// --- RATE LIMITER (all requests) ---
+
+const reqCounts = new Map();
+setInterval(() => {
+    const now = Date.now();
+    for (const [k, v] of reqCounts) {
+        if (now > v.resetAt) reqCounts.delete(k);
+    }
+}, 10000);
+
+function rateLimit(req, res, next) {
+    const ip = getClientIP(req);
+    const now = Date.now();
+    let entry = reqCounts.get(ip);
+    if (!entry || now > entry.resetAt) {
+        entry = { count: 0, resetAt: now + 10000 };
+        reqCounts.set(ip, entry);
+    }
+    entry.count++;
+    if (entry.count > 60) {
+        return res.status(429).json({ error: 'Слишком много запросов, подожди' });
+    }
+    next();
+}
+app.use(rateLimit);
+
+// --- CONCURRENT REQUEST LIMITER ---
+
+const activeConns = new Map();
+app.use((req, res, next) => {
+    const ip = getClientIP(req);
+    const n = (activeConns.get(ip) || 0) + 1;
+    activeConns.set(ip, n);
+    if (n > 10) {
+        activeConns.set(ip, n - 1);
+        return res.status(429).json({ error: 'Слишком много одновременных запросов' });
+    }
+    res.on('finish', () => {
+        const c = activeConns.get(ip);
+        if (c && c > 1) activeConns.set(ip, c - 1);
+        else activeConns.delete(ip);
+    });
+    next();
+});
+
+// --- REQUEST TIMEOUT ---
+
+app.use((req, res, next) => {
+    res.setTimeout(10000, () => {
+        if (!res.headersSent) res.status(503).json({ error: 'Timeout' });
+        try { req.destroy(); } catch(e) {}
+    });
     next();
 });
 
