@@ -22,6 +22,20 @@ app.use((req, res, next) => {
     next();
 });
 
+// --- HEADER/LIMITS GATE ---
+
+app.use((req, res, next) => {
+    const did = req.headers['x-device-id'];
+    if (did && did.length > 64) {
+        return res.status(400).json({ error: 'Invalid device ID' });
+    }
+    const ua = req.headers['user-agent'];
+    if (ua && ua.length > 256) {
+        return res.status(400).json({ error: 'Invalid user-agent' });
+    }
+    next();
+});
+
 function getClientIP(req) {
     return (req.headers['x-forwarded-for'] || '').split(',')[0].trim() || req.socket.remoteAddress || 'unknown';
 }
@@ -72,7 +86,11 @@ async function getPosts() {
     }
 }
 
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'mR55_2026!Admin#Secure';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+if (!ADMIN_PASSWORD) {
+    console.error('FATAL: ADMIN_PASSWORD env var not set');
+    process.exit(1);
+}
 
 // --- RATE LIMITER (in-memory) ---
 
@@ -608,7 +626,8 @@ app.post('/api/posts/:id/like', async (req, res) => {
     try {
         const did = getDeviceID(req);
         if (!did) return res.status(400).json({ error: 'Device ID required' });
-        if (!checkActionLimit(did, 'like', 30, 60000)) {
+        const ip = getClientIP(req);
+        if (!checkActionLimit(ip, 'like', 30, 60000)) {
             return res.status(429).json({ error: 'Слишком много лайков, подожди' });
         }
 
