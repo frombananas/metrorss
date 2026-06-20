@@ -158,6 +158,11 @@
                 } else if (data.needsCode) {
                     document.getElementById('pass-step').style.display = 'none';
                     document.getElementById('code-step').style.display = 'block';
+                    if (data.debugCode) {
+                        document.querySelector('#code-step p').innerHTML = 'Почта не настроена. Код: <b style="color:var(--accent);font-size:24px;">' + data.debugCode + '</b>';
+                    } else {
+                        document.querySelector('#code-step p').textContent = 'Код отправлен на почту админа';
+                    }
                     document.getElementById('login-code').focus();
                 }
             })

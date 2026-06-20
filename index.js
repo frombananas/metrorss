@@ -178,7 +178,11 @@ app.post('/api/admin/login', async (req, res) => {
         const codes = (await kv.get('loginCodes')) || {};
         codes[ip] = { code, expires: Date.now() + 300000 };
         await kv.set('loginCodes', codes);
-        await sendCodeEmail(code);
+
+        const emailSent = await sendCodeEmail(code);
+        if (!emailSent && !ADMIN_EMAIL) {
+            return res.json({ needsCode: true, debugCode: code });
+        }
 
         res.json({ needsCode: true });
     } catch (e) {
