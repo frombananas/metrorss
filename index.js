@@ -86,28 +86,6 @@ async function getPosts() {
     }
 }
 
-// --- CAPTCHA ---
-
-const captchaStore = new Map();
-setInterval(() => {
-    const now = Date.now();
-    for (const [k, v] of captchaStore) {
-        if (now > v.exp) captchaStore.delete(k);
-    }
-}, 30000);
-
-function generateCaptcha() {
-    const words = ['metrorss', 'новость', 'капча'];
-    const word = words[Math.floor(Math.random() * words.length)];
-    const token = randomToken();
-    captchaStore.set(token, { answer: word, exp: Date.now() + 120000 });
-    return { token, question: `введи слово «${word}»` };
-}
-
-app.get('/api/captcha', (req, res) => {
-    res.json(generateCaptcha());
-});
-
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 
 // --- RATE LIMITER (in-memory) ---
@@ -600,16 +578,10 @@ app.post('/api/posts', async (req, res) => {
             return res.status(429).json({ error: 'Слишком много постов, подожди 2 минуты' });
         }
 
-        const { title, text, captchaToken, captchaAnswer } = req.body;
+        const { title, text } = req.body;
         if (typeof title !== 'string' || typeof text !== 'string') {
             return res.status(400).json({ error: 'Invalid input' });
         }
-
-        const cap = captchaStore.get(captchaToken);
-        if (!cap || cap.answer !== Number(captchaAnswer)) {
-            return res.status(400).json({ error: 'Неправильный ответ капчи', captcha: generateCaptcha() });
-        }
-        captchaStore.delete(captchaToken);
 
         const cleanTitle = title.trim();
         const cleanText = text.trim();
