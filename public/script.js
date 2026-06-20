@@ -277,6 +277,7 @@ async function postNews() {
     const titleEl = document.getElementById('t');
     const textEl = document.getElementById('d');
     const btn = document.getElementById('submit-btn');
+    const captchaInput = document.getElementById('captcha-input');
     
     if (!titleEl.value.trim() || !textEl.value.trim()) {
         return alert('Заполните все поля!');
@@ -289,17 +290,26 @@ async function postNews() {
         const res = await fetch(API, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ title: titleEl.value, text: textEl.value })
+            body: JSON.stringify({ 
+                title: titleEl.value, 
+                text: textEl.value,
+                captchaToken: document.getElementById('captcha-token').value,
+                captchaAnswer: captchaInput.value
+            })
         });
         const data = await res.json();
         
         if (!res.ok) {
+            if (data.captcha) applyCaptcha(data.captcha);
+            else await loadCaptcha();
             const msg = data.reason ? data.error + ' (' + data.reason + ')' : data.error;
             throw new Error(msg || 'Сервер ответил ошибкой: ' + res.status);
         }
         
         titleEl.value = '';
         textEl.value = '';
+        captchaInput.value = '';
+        await loadCaptcha();
         await loadNews();
     } catch (e) {
         alert(e.message);
@@ -307,6 +317,20 @@ async function postNews() {
         btn.disabled = false;
         btn.innerHTML = '<i class="material-icons" style="font-size:18px;">send</i> опубликовать';
     }
+}
+
+async function loadCaptcha() {
+    try {
+        const res = await fetch('/api/captcha');
+        const data = await res.json();
+        applyCaptcha(data);
+    } catch(e) {}
+}
+
+function applyCaptcha(data) {
+    document.getElementById('captcha-question').textContent = data.question;
+    document.getElementById('captcha-token').value = data.token;
+    document.getElementById('captcha-input').value = '';
 }
 
 document.getElementById('submit-btn').addEventListener('click', postNews);
@@ -342,6 +366,7 @@ async function loadEmergency() {
     } catch(e) {}
 }
 loadEmergency();
+loadCaptcha();
 
 let currentFeed = 'all';
 

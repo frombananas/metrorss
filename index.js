@@ -86,6 +86,30 @@ async function getPosts() {
     }
 }
 
+// --- CAPTCHA ---
+
+const captchaStore = new Map();
+setInterval(() => {
+    const now = Date.now();
+    for (const [k, v] of captchaStore) {
+        if (now > v.exp) captchaStore.delete(k);
+    }
+}, 30000);
+
+function generateCaptcha() {
+    const a = Math.floor(Math.random() * 20) + 1;
+    const b = Math.floor(Math.random() * 20) + 1;
+    const op = Math.random() > 0.5 ? '+' : '-';
+    const answer = op === '+' ? a + b : a - b;
+    const token = randomToken();
+    captchaStore.set(token, { answer, exp: Date.now() + 120000 });
+    return { token, question: `${a} ${op} ${b} = ?` };
+}
+
+app.get('/api/captcha', (req, res) => {
+    res.json(generateCaptcha());
+});
+
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 
 // --- RATE LIMITER (in-memory) ---
@@ -578,10 +602,16 @@ app.post('/api/posts', async (req, res) => {
             return res.status(429).json({ error: 'Слишком много постов, подожди 2 минуты' });
         }
 
-        const { title, text } = req.body;
+        const { title, text, captchaToken, captchaAnswer } = req.body;
         if (typeof title !== 'string' || typeof text !== 'string') {
             return res.status(400).json({ error: 'Invalid input' });
         }
+
+        const cap = captchaStore.get(captchaToken);
+        if (!cap || cap.answer !== Number(captchaAnswer)) {
+            return res.status(400).json({ error: 'Неправильный ответ капчи', captcha: generateCaptcha() });
+        }
+        captchaStore.delete(captchaToken);
 
         const cleanTitle = title.trim();
         const cleanText = text.trim();
