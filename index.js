@@ -508,8 +508,9 @@ app.post('/api/posts', async (req, res) => {
 
 app.post('/api/posts/:id/like', async (req, res) => {
     try {
-        const ip = getClientIP(req);
-        if (!checkActionLimit(ip, 'like', 30, 60000)) {
+        const did = getDeviceID(req);
+        if (!did) return res.status(400).json({ error: 'Device ID required' });
+        if (!checkActionLimit(did, 'like', 30, 60000)) {
             return res.status(429).json({ error: 'Слишком много лайков, подожди' });
         }
 
@@ -519,11 +520,11 @@ app.post('/api/posts/:id/like', async (req, res) => {
         
         if (!post.likedBy) post.likedBy = [];
         
-        if (post.likedBy.includes(ip)) {
+        if (post.likedBy.includes(did)) {
             return res.status(409).json({ error: 'Already liked', likes: post.likes });
         }
         
-        post.likedBy.push(ip);
+        post.likedBy.push(did);
         post.likes = (post.likes || 0) + 1;
         await kv.set('posts', posts.slice(0, 500));
         res.json({ likes: post.likes });
