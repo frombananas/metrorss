@@ -1,10 +1,14 @@
 const express = require('express');
+const path = require('path');
 const helmet = require('helmet');
 const { kv } = require('@vercel/kv');
 
 const app = express();
 app.use(helmet());
 app.use(express.json({ limit: '10kb' }));
+
+// Serve static files from public/
+app.use(express.static(path.join(__dirname, 'public')));
 
 // CORS
 app.use((req, res, next) => {
