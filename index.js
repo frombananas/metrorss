@@ -56,7 +56,6 @@ function escapeXml(str) {
 async function getPosts() {
     try {
         const posts = await kv.get('posts');
-        console.log('KV GET posts:', posts);
         return Array.isArray(posts) ? posts : [];
     } catch (e) {
         console.error('KV GET error:', e);
@@ -88,8 +87,6 @@ app.get('/api/posts', async (req, res) => {
 app.post('/api/posts', async (req, res) => {
     try {
         const { title, text } = req.body;
-        console.log('POST /api/posts:', { title, text });
-        
         if (typeof title !== 'string' || typeof text !== 'string') {
             return res.status(400).json({ error: 'Invalid input' });
         }
@@ -120,8 +117,6 @@ app.post('/api/posts', async (req, res) => {
         posts.unshift(newPost);
         
         await kv.set('posts', posts.slice(0, 500));
-        console.log('KV SET success, posts count:', posts.length);
-        
         res.status(201).json(newPost);
     } catch (e) {
         console.error('/api/posts POST error:', e);
@@ -167,6 +162,8 @@ app.post('/api/posts/:id/comments', async (req, res) => {
         res.status(500).json({ error: 'Comment failed' });
     }
 });
+
+app.get('/rss', async (req, res) => {
     try {
         const posts = await getPosts();
         res.set('Content-Type', 'application/rss+xml; charset=utf-8');
@@ -191,11 +188,6 @@ app.post('/api/posts/:id/comments', async (req, res) => {
         console.error('/rss error:', e);
         res.status(500).send('RSS error');
     }
-});
-
-// Health check
-app.get('/api/health', (req, res) => {
-    res.json({ ok: true, kv: !!process.env.KV_REST_API_URL });
 });
 
 module.exports = app;
