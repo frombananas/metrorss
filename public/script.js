@@ -3,7 +3,13 @@ const API = "/api/posts";
 async function likePost(id, btn, countEl) {
     try {
         const res = await fetch(API + '/' + id + '/like', { method: 'POST' });
-        if (!res.ok) throw new Error('err');
+        if (!res.ok) {
+            const errData = await res.json().catch(() => ({}));
+            if (res.status === 403 && errData.error) {
+                alert(errData.error + (errData.reason ? ' (' + errData.reason + ')' : ''));
+            }
+            return;
+        }
         const data = await res.json();
         countEl.textContent = data.likes;
         btn.classList.add('liked');
@@ -22,7 +28,14 @@ async function addComment(id, inputEl, listEl) {
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({ text: text })
         });
-        if (!res.ok) { inputEl.disabled = false; return; }
+        if (!res.ok) {
+            const errData = await res.json().catch(() => ({}));
+            if (res.status === 403 && errData.error) {
+                alert(errData.error + (errData.reason ? ' (' + errData.reason + ')' : ''));
+            }
+            inputEl.disabled = false;
+            return;
+        }
         const comments = await res.json();
         renderComments(comments, listEl);
     } catch (e) {}
@@ -48,7 +61,14 @@ async function loadNews() {
     feed.innerHTML = '<img class="loader-gif" src="https://media.tenor.com/ptkoPmx8XAkAAAAi/windows-loading.gif">';
     try {
         const res = await fetch(API);
-        if (!res.ok) throw new Error('Ошибка сервера (' + res.status + ')');
+        if (!res.ok) {
+            const errData = await res.json().catch(() => ({}));
+            if (res.status === 403 && errData.error) {
+                feed.innerHTML = '<div class="post" style="border-color:#e51400;"><p style="color:#e51400;font-weight:300;"><b>вы забанены</b>' + (errData.reason ? '<br><span style="color:#999;font-size:13px;">причина: ' + errData.reason + '</span>' : '') + '</p></div>';
+                return;
+            }
+            throw new Error('Ошибка сервера (' + res.status + ')');
+        }
         const data = await res.json();
         if (!Array.isArray(data) || data.length === 0) { 
             feed.innerHTML = '<p style="color:#666;font-style:italic;font-weight:300;">лента новостей пуста.</p>'; 
