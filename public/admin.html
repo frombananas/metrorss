@@ -67,7 +67,8 @@
 
         <div class="tab-bar">
             <button class="tab-btn active" data-tab="posts">посты</button>
-            <button class="tab-btn" data-tab="bans">баны</button>
+            <button class="tab-btn" data-tab="bans">баны IP</button>
+            <button class="tab-btn" data-tab="devices">баны device</button>
         </div>
 
         <div class="tab-content active" id="tab-posts">
@@ -90,6 +91,23 @@
             </div>
             <div id="bans-list"></div>
         </div>
+
+        <div class="tab-content" id="tab-devices">
+            <div class="ban-form">
+                <input id="ban-device-id" placeholder="Device ID">
+                <input id="ban-device-reason" placeholder="причина (опционально)">
+                <select id="ban-device-duration" style="background:#111;color:#fff;border:1px solid #333;padding:8px 12px;font-size:13px;font-family:inherit;min-width:80px;">
+                    <option value="3600000">1 час</option>
+                    <option value="21600000">6 часов</option>
+                    <option value="86400000" selected>24 часа</option>
+                    <option value="259200000">3 дня</option>
+                    <option value="604800000">7 дней</option>
+                    <option value="0">навсегда</option>
+                </select>
+                <button id="ban-device-btn">забанить</button>
+            </div>
+            <div id="devices-list"></div>
+        </div>
     </div>
 
     <script>
@@ -105,7 +123,7 @@
             api('/api/admin/stats').then(() => {
                 document.getElementById('login-box').style.display = 'none';
                 document.getElementById('dashboard').style.display = 'block';
-                loadStats(); loadPosts(); loadBans();
+                loadStats(); loadPosts(); loadBans(); loadDeviceBans();
             }).catch(() => {
                 localStorage.removeItem('adminToken');
                 token = '';
@@ -148,7 +166,7 @@
                 localStorage.setItem('adminToken', token);
                 document.getElementById('login-box').style.display = 'none';
                 document.getElementById('dashboard').style.display = 'block';
-                loadStats(); loadPosts(); loadBans();
+                loadStats(); loadPosts(); loadBans(); loadDeviceBans();
             })
             .catch(() => {
                 btn.disabled = false;
@@ -227,6 +245,43 @@
             const until = dur > 0 ? Date.now() + dur : 0;
             api('/api/admin/ban', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ip, reason, until }) })
                 .then(() => { document.getElementById('ban-ip').value = ''; document.getElementById('ban-reason').value = ''; loadBans(); loadStats(); });
+        });
+
+        function loadDeviceBans() {
+            const el = document.getElementById('devices-list');
+            el.innerHTML = '<div class="loader">загрузка...</div>';
+            api('/api/admin/banned-devices').then(devices => {
+                const keys = Object.keys(devices);
+                if (!keys.length) { el.innerHTML = '<p style="color:#666;">банов device нет</p>'; return; }
+                el.innerHTML = keys.map(id => {
+                    const b = devices[id];
+                    const untilStr = b.until && b.until !== Infinity ? 'до ' + new Date(b.until).toLocaleString('ru') : 'навсегда';
+                    return `
+                        <div class="ban-item">
+                            <div class="info">
+                                <div class="ip" style="font-size:11px;word-break:break-all;">${id}</div>
+                                <div class="reason">${b.reason || 'без причины'} &middot; ${untilStr}</div>
+                            </div>
+                            <button class="unban-btn" data-device="${id}">разбанить</button>
+                        </div>
+                    `;
+                }).join('');
+                el.querySelectorAll('.unban-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        api('/api/admin/ban-device/' + encodeURIComponent(btn.dataset.device), { method: 'DELETE' }).then(() => { loadDeviceBans(); loadStats(); });
+                    });
+                });
+            }).catch(() => { el.innerHTML = '<p style="color:#e51400;">ошибка загрузки</p>'; });
+        }
+
+        document.getElementById('ban-device-btn').addEventListener('click', () => {
+            const deviceId = document.getElementById('ban-device-id').value.trim();
+            const reason = document.getElementById('ban-device-reason').value.trim();
+            const dur = parseInt(document.getElementById('ban-device-duration').value);
+            if (!deviceId) return;
+            const until = dur > 0 ? Date.now() + dur : 0;
+            api('/api/admin/ban-device', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ deviceId, reason, until }) })
+                .then(() => { document.getElementById('ban-device-id').value = ''; document.getElementById('ban-device-reason').value = ''; loadDeviceBans(); loadStats(); });
         });
 
         document.querySelectorAll('.tab-btn').forEach(btn => {

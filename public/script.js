@@ -1,5 +1,22 @@
 const API = "/api/posts";
 
+function getDeviceID() {
+    let id = localStorage.getItem('_did');
+    if (!id) {
+        id = 'd_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8);
+        localStorage.setItem('_did', id);
+    }
+    return id;
+}
+
+const origFetch = window.fetch;
+window.fetch = function(url, opts = {}) {
+    opts = opts || {};
+    opts.headers = opts.headers || {};
+    opts.headers['X-Device-ID'] = getDeviceID();
+    return origFetch.call(window, url, opts);
+};
+
 async function likePost(id, btn, countEl) {
     try {
         const res = await fetch(API + '/' + id + '/like', { method: 'POST' });

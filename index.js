@@ -137,7 +137,13 @@ async function adminAuth(req, res, next) {
     }
 }
 
-// --- IP BAN MIDDLEWARE ---
+// --- DEVICE ID HELPER ---
+
+function getDeviceID(req) {
+    return req.headers['x-device-id'] || '';
+}
+
+// --- IP + DEVICE BAN MIDDLEWARE ---
 
 app.use(async (req, res, next) => {
     if (req.path.startsWith('/api/admin')) return next();
@@ -147,6 +153,15 @@ app.use(async (req, res, next) => {
         const ban = blockedIPs[ip];
         if (ban && ban.until > Date.now()) {
             return res.status(403).json({ error: 'вы забанены', reason: ban.reason || 'без причины' });
+        }
+
+        const deviceId = getDeviceID(req);
+        if (deviceId) {
+            const blockedDevices = (await kv.get('blockedDevices')) || {};
+            const dban = blockedDevices[deviceId];
+            if (dban && dban.until > Date.now()) {
+                return res.status(403).json({ error: 'вы забанены', reason: dban.reason || 'без причины' });
+            }
         }
     } catch (e) {}
     next();
@@ -246,6 +261,41 @@ app.delete('/api/admin/ban/:ip', adminAuth, async (req, res) => {
         const blockedIPs = (await kv.get('blockedIPs')) || {};
         delete blockedIPs[req.params.ip];
         await kv.set('blockedIPs', blockedIPs);
+        res.json({ ok: true });
+    } catch (e) {
+        res.status(500).json({ error: 'Unban failed' });
+    }
+});
+
+// --- DEVICE BAN ADMIN ROUTES ---
+
+app.get('/api/admin/banned-devices', adminAuth, async (req, res) => {
+    try {
+        const blockedDevices = (await kv.get('blockedDevices')) || {};
+        res.json(blockedDevices);
+    } catch (e) {
+        res.status(500).json({ error: 'Failed to load device bans' });
+    }
+});
+
+app.post('/api/admin/ban-device', adminAuth, async (req, res) => {
+    try {
+        const { deviceId, reason, until } = req.body;
+        if (!deviceId) return res.status(400).json({ error: 'deviceId required' });
+        const blockedDevices = (await kv.get('blockedDevices')) || {};
+        blockedDevices[deviceId] = { reason: reason || 'Manual ban', until: until || Date.now() + 86400000, at: Date.now() };
+        await kv.set('blockedDevices', blockedDevices);
+        res.json({ ok: true });
+    } catch (e) {
+        res.status(500).json({ error: 'Ban failed' });
+    }
+});
+
+app.delete('/api/admin/ban-device/:deviceId', adminAuth, async (req, res) => {
+    try {
+        const blockedDevices = (await kv.get('blockedDevices')) || {};
+        delete blockedDevices[req.params.deviceId];
+        await kv.set('blockedDevices', blockedDevices);
         res.json({ ok: true });
     } catch (e) {
         res.status(500).json({ error: 'Unban failed' });
