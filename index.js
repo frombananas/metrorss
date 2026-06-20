@@ -197,11 +197,23 @@ function rateLimit(req, res, next) {
     const now = Date.now();
     let entry = reqCounts.get(ip);
     if (!entry || now > entry.resetAt) {
-        entry = { count: 0, resetAt: now + 10000 };
+        entry = { count: 0, strike: 0, resetAt: now + 10000 };
         reqCounts.set(ip, entry);
     }
     entry.count++;
     if (entry.count > 60) {
+        entry.strike = (entry.strike || 0) + 1;
+        if (entry.strike >= 3) {
+            entry.strike = 0;
+            const until = Date.now() + 1800000;
+            try {
+                kv.get('blockedIPs').then(b => {
+                    const bans = b || {};
+                    bans[ip] = { until, reason: 'автобан: DoS' };
+                    kv.set('blockedIPs', bans);
+                });
+            } catch(e) {}
+        }
         return res.status(429).json({ error: 'Слишком много запросов, подожди' });
     }
     next();
@@ -217,6 +229,15 @@ app.use((req, res, next) => {
     activeConns.set(ip, n);
     if (n > 10) {
         activeConns.set(ip, n - 1);
+        try {
+            kv.get('blockedIPs').then(b => {
+                const bans = b || {};
+                if (!bans[ip]) {
+                    bans[ip] = { until: Date.now() + 3600000, reason: 'автобан: флуд соединениями' };
+                    kv.set('blockedIPs', bans);
+                }
+            });
+        } catch(e) {}
         return res.status(429).json({ error: 'Слишком много одновременных запросов' });
     }
     res.on('finish', () => {
