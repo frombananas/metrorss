@@ -331,6 +331,40 @@ app.delete('/api/admin/ban-device/:deviceId', adminAuth, async (req, res) => {
     }
 });
 
+// --- ADMIN EMERGENCY ---
+
+app.get('/api/admin/emergency', adminAuth, async (req, res) => {
+    try {
+        const msg = (await kv.get('emergency')) || { text: '', active: false };
+        res.json(msg);
+    } catch (e) { res.status(500).json({ error: 'Failed to load' }); }
+});
+
+app.post('/api/admin/emergency', adminAuth, async (req, res) => {
+    try {
+        const { text } = req.body;
+        if (!text || text.length > 2000) return res.status(400).json({ error: 'Text required (max 2000)' });
+        await kv.set('emergency', { text, active: true, at: Date.now() });
+        res.json({ ok: true });
+    } catch (e) { res.status(500).json({ error: 'Failed to save' }); }
+});
+
+app.delete('/api/admin/emergency', adminAuth, async (req, res) => {
+    try {
+        await kv.set('emergency', { text: '', active: false });
+        res.json({ ok: true });
+    } catch (e) { res.status(500).json({ error: 'Failed to clear' }); }
+});
+
+// --- PUBLIC EMERGENCY ---
+
+app.get('/api/emergency', async (req, res) => {
+    try {
+        const msg = (await kv.get('emergency')) || { text: '', active: false };
+        res.json(msg);
+    } catch (e) { res.json({ text: '', active: false }); }
+});
+
 // --- ROUTES ---
 
 app.get('/api/health', async (req, res) => {

@@ -326,3 +326,19 @@ document.addEventListener('pointerdown', (e) => {
 });
 
 loadNews();
+
+async function loadEmergency() {
+    try {
+        const res = await fetch('/api/emergency');
+        const data = await res.json();
+        const banner = document.getElementById('emergency-banner');
+        const textEl = document.getElementById('emergency-text');
+        if (data.active && data.text) {
+            textEl.textContent = data.text;
+            banner.style.display = 'block';
+        } else {
+            banner.style.display = 'none';
+        }
+    } catch(e) {}
+}
+loadEmergency();
