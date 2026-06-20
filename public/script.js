@@ -176,7 +176,7 @@ function toggleComments(commentsEl) {
 
 async function loadNews() {
     const feed = document.getElementById('feed');
-    feed.innerHTML = '<img class="loader-gif" src="https://media.tenor.com/ptkoPmx8XAkAAAAi/windows-loading.gif">';
+    feed.innerHTML = '<img class="loader-gif" src="/loader.gif">';
     try {
         const res = await fetch(API);
         if (!res.ok) {
@@ -360,7 +360,7 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 
 async function loadLiked() {
     const feed = document.getElementById('feed');
-    feed.innerHTML = '<img class="loader-gif" src="https://media.tenor.com/ptkoPmx8XAkAAAAi/windows-loading.gif">';
+    feed.innerHTML = '<img class="loader-gif" src="/loader.gif">';
     try {
         const res = await fetch('/api/liked-by-device');
         const data = await res.json();
