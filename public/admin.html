@@ -76,6 +76,7 @@
             <button class="tab-btn active" data-tab="posts">посты</button>
             <button class="tab-btn" data-tab="bans">баны IP</button>
             <button class="tab-btn" data-tab="devices">баны device</button>
+            <button class="tab-btn" data-tab="danger">опасная зона</button>
         </div>
 
         <div class="tab-content active" id="tab-posts">
@@ -117,12 +118,14 @@
             <p style="color:#555;font-size:12px;margin-top:12px;">узнать deviceId юзера: он возвращается в ответе при бане (403) или спроси у юзера — открой F12 → localStorage → ключ <code style="background:#111;padding:1px 4px;">_did</code><br>твой текущий deviceId: <span id="my-device-id" style="color:var(--accent);font-size:11px;"></span></p>
         </div>
 
-        <div class="danger-zone">
-            <h4>⚠️ опасная зона</h4>
-            <div class="btn-row">
-                <button class="danger-btn" id="btn-clear-posts">🗑 очистить все посты</button>
-                <button class="danger-btn" id="btn-unban-all">🔓 снять все баны IP</button>
-                <button class="danger-btn" id="btn-unban-all-devices">🔓 снять все баны device</button>
+        <div class="tab-content" id="tab-danger">
+            <div class="danger-zone">
+                <h4>⚠️ опасная зона</h4>
+                <div class="btn-row">
+                    <button class="danger-btn" id="btn-clear-posts">🗑 очистить все посты</button>
+                    <button class="danger-btn" id="btn-unban-all">🔓 снять все баны IP</button>
+                    <button class="danger-btn" id="btn-unban-all-devices">🔓 снять все баны device</button>
+                </div>
             </div>
         </div>
     </div>
