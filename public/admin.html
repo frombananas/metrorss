@@ -107,6 +107,7 @@
                 <button id="ban-device-btn">забанить</button>
             </div>
             <div id="devices-list"></div>
+            <p style="color:#555;font-size:12px;margin-top:12px;">узнать deviceId юзера: он возвращается в ответе при бане (403) или спроси у юзера — открой F12 → localStorage → ключ <code style="background:#111;padding:1px 4px;">_did</code><br>твой текущий deviceId: <span id="my-device-id" style="color:var(--accent);font-size:11px;"></span></p>
         </div>
     </div>
 
@@ -116,6 +117,7 @@
         function api(path, opts = {}) {
             opts.headers = opts.headers || {};
             opts.headers['Authorization'] = 'Bearer ' + token;
+            opts.headers['X-Device-ID'] = getMyDeviceId();
             return fetch(path, opts).then(r => { if (!r.ok) throw new Error(); return r.json(); });
         }
 
@@ -273,6 +275,18 @@
                 });
             }).catch(() => { el.innerHTML = '<p style="color:#e51400;">ошибка загрузки</p>'; });
         }
+
+        function getMyDeviceId() {
+            try {
+                let id = localStorage.getItem('_did');
+                if (!id) {
+                    id = 'd_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8);
+                    localStorage.setItem('_did', id);
+                }
+                return id;
+            } catch(e) { return 'ошибка'; }
+        }
+        document.getElementById('my-device-id').textContent = getMyDeviceId();
 
         document.getElementById('ban-device-btn').addEventListener('click', () => {
             const deviceId = document.getElementById('ban-device-id').value.trim();

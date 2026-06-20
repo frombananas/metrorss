@@ -152,7 +152,7 @@ app.use(async (req, res, next) => {
         const ip = getClientIP(req);
         const ban = blockedIPs[ip];
         if (ban && ban.until > Date.now()) {
-            return res.status(403).json({ error: 'вы забанены', reason: ban.reason || 'без причины' });
+            return res.status(403).json({ error: 'вы забанены', reason: ban.reason || 'без причины', deviceId: getDeviceID(req) });
         }
 
         const deviceId = getDeviceID(req);
@@ -160,7 +160,7 @@ app.use(async (req, res, next) => {
             const blockedDevices = (await kv.get('blockedDevices')) || {};
             const dban = blockedDevices[deviceId];
             if (dban && dban.until > Date.now()) {
-                return res.status(403).json({ error: 'вы забанены', reason: dban.reason || 'без причины' });
+                return res.status(403).json({ error: 'вы забанены', reason: dban.reason || 'без причины', deviceId });
             }
         }
     } catch (e) {}
