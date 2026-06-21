@@ -161,6 +161,7 @@ async function adminAuth(req, res, next) {
 function getDeviceID(req) {
     const id = req.headers['x-device-id'] || '';
     if (id && !id.startsWith('d_') && !id.startsWith('d2_')) return '';
+    if (id && id.length < 6) return '';
     return id;
 }
 
@@ -187,7 +188,7 @@ app.use(async (req, res, next) => {
             const devicesPerIP = (await kv.get('devicesPerIP:' + ip)) || {};
             if (!devicesPerIP[deviceId]) {
                 devicesPerIP[deviceId] = Date.now();
-                if (Object.keys(devicesPerIP).length > 5) {
+                if (Object.keys(devicesPerIP).length > 2) {
                     const banned = (await kv.get('blockedIPs')) || {};
                     banned[ip] = { until: Date.now() + 86400000, reason: 'автобан: смена deviceID' };
                     await kv.set('blockedIPs', banned);
