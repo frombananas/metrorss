@@ -385,71 +385,18 @@
                 return hashStr(c.toDataURL());
             } catch(e) { return ''; }
         }
-        function getWebGLFP() {
-            try {
-                const c = document.createElement('canvas');
-                const gl = c.getContext('webgl') || c.getContext('experimental-webgl');
-                if (!gl) return '';
-                const ext = gl.getExtension('WEBGL_debug_renderer_info');
-                if (!ext) return '';
-                return hashStr(gl.getParameter(ext.UNMASKED_VENDOR_WEBGL) + '|' + gl.getParameter(ext.UNMASKED_RENDERER_WEBGL));
-            } catch(e) { return ''; }
-        }
-        function getAudioFP() {
-            try {
-                const ctx = new (window.OfflineAudioContext || window.webkitOfflineAudioContext)(1, 44100, 44100);
-                const osc = ctx.createOscillator();
-                osc.type = 'triangle'; osc.frequency.value = 1e4;
-                const comp = ctx.createDynamicsCompressor();
-                comp.threshold.value = -50; comp.knee.value = 40; comp.ratio.value = 12;
-                osc.connect(comp); comp.connect(ctx.destination); osc.start(0);
-                return ctx.startRendering().then(buf => hashStr(buf.getChannelData(0).slice(0, 1000).join('|'))).catch(() => '');
-            } catch(e) { return Promise.resolve(''); }
-        }
-        function getConnectionFP() {
-            try {
-                const c = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-                if (!c) return '';
-                return [c.effectiveType || '', c.downlink || '', c.rtt || '', c.saveData ? '1' : '0'].join('|');
-            } catch(e) { return ''; }
-        }
-        function getOrientationFP() {
-            try {
-                const o = screen.orientation || screen.mozOrientation || screen.msOrientation;
-                return o ? o.type + '|' + o.angle : '';
-            } catch(e) { return ''; }
-        }
-        function getCSSFP() {
-            try {
-                const features = ['backdrop-filter', 'grid', 'sticky', 'transform-style:preserve-3d', 'mix-blend-mode', 'clip-path', 'aspect-ratio', 'subgrid'];
-                return features.map(f => CSS.supports(f) ? '1' : '0').join('');
-            } catch(e) { return ''; }
-        }
         function getSignalString() {
             const parts = [
                 navigator.userAgent,
-                screen.width + 'x' + screen.height,
-                screen.colorDepth,
-                screen.pixelDepth,
-                screen.availWidth + 'x' + screen.availHeight,
+                screen.width + 'x' + screen.height + 'x' + screen.colorDepth,
                 navigator.language,
                 Intl.DateTimeFormat().resolvedOptions().timeZone,
                 navigator.platform,
-                navigator.hardwareConcurrency,
+                navigator.hardwareConcurrency || '',
                 navigator.deviceMemory || '',
                 navigator.maxTouchPoints,
-                (navigator.languages || []).join(','),
-                navigator.plugins ? navigator.plugins.length : '',
-                navigator.mimeTypes ? navigator.mimeTypes.length : '',
-                navigator.productSub || '',
-                navigator.webdriver || '',
-                navigator.cookieEnabled,
-                navigator.doNotTrack || '',
                 getCanvasFP(),
-                getWebGLFP(),
-                getConnectionFP(),
-                getOrientationFP(),
-                getCSSFP()
+                navigator.webdriver || ''
             ];
             return parts.join('|');
         }
