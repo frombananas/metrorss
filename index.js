@@ -304,10 +304,15 @@ app.use(async (req, res, next) => {
 
             const devicesPerIP = (await kv.get('devicesPerIP:' + ip)) || {};
             if (!devicesPerIP[deviceId]) {
-                devicesPerIP[deviceId] = Date.now();
-                if (Object.keys(devicesPerIP).length > 2) {
+                const now = Date.now();
+                // clean stale entries older than 1 hour
+                for (const [k, v] of Object.entries(devicesPerIP)) {
+                    if (now - v > 3600000) delete devicesPerIP[k];
+                }
+                devicesPerIP[deviceId] = now;
+                if (Object.keys(devicesPerIP).length > 8) {
                     const banned = await getBlockedIPs();
-                    banned[ip] = { until: Date.now() + 86400000, reason: 'автобан: смена deviceID' };
+                    banned[ip] = { until: now + 3600000, reason: 'автобан: смена deviceID' };
                     await kv.set('blockedIPs', banned);
                     banCache.at = 0;
                     return res.status(403).json({ error: 'вы забанены', reason: 'Слишком много устройств с одного IP', deviceId });
