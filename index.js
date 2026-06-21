@@ -1,11 +1,18 @@
 const express = require('express');
 const path = require('path');
 const helmet = require('helmet');
+const net = require('net');
 const { kv } = require('@vercel/kv');
 
 const app = express();
 app.use(helmet());
 app.use(express.json({ limit: '10kb' }));
+
+// CSP headers
+app.use((req, res, next) => {
+    res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://metrorss.vercel.app; frame-ancestors 'none'");
+    next();
+});
 
 // Serve static files from public/
 app.use(express.static(path.join(__dirname, 'public')));
@@ -217,6 +224,7 @@ function validateDeviceSignals(req) {
 const vpsCache = new Map();
 
 async function isVPSIP(ip) {
+    if (!ip || !net.isIP(ip)) return false;
     if (vpsCache.has(ip)) return vpsCache.get(ip);
     try {
         const ctrl = new AbortController();
@@ -334,13 +342,25 @@ app.use(rateLimit);
 // --- CONCURRENT REQUEST LIMITER ---
 
 const activeConns = new Map();
+setInterval(() => {
+    const now = Date.now();
+    for (const [ip, val] of activeConns) {
+        if (now > val.resetAt) activeConns.delete(ip);
+    }
+}, 30000);
+
 app.use((req, res, next) => {
     if (req.path.startsWith('/api/admin')) return next();
     const ip = getClientIP(req);
-    const n = (activeConns.get(ip) || 0) + 1;
-    activeConns.set(ip, n);
-    if (n > 10) {
-        activeConns.set(ip, n - 1);
+    const now = Date.now();
+    let entry = activeConns.get(ip);
+    if (!entry || now > entry.resetAt) {
+        entry = { count: 0, resetAt: now + 30000 };
+        activeConns.set(ip, entry);
+    }
+    entry.count++;
+    if (entry.count > 10) {
+        entry.count--;
         try {
             kv.get('blockedIPs').then(b => {
                 const bans = b || {};
@@ -354,7 +374,7 @@ app.use((req, res, next) => {
     }
     res.on('finish', () => {
         const c = activeConns.get(ip);
-        if (c && c > 1) activeConns.set(ip, c - 1);
+        if (c && c.count > 1) c.count--;
         else activeConns.delete(ip);
     });
     next();
@@ -374,12 +394,12 @@ app.use((req, res, next) => {
 
 app.post('/api/admin/login', async (req, res) => {
     try {
+        const ip = getClientIP(req);
+        if (!checkRateLimit(ip)) return res.status(429).json({ error: 'Слишком много попыток, подождите' });
+
         const { password } = req.body;
         if (!password) return res.status(400).json({ error: 'Введите пароль' });
         if (password !== ADMIN_PASSWORD) return res.status(403).json({ error: 'Неверный пароль' });
-
-        const ip = getClientIP(req);
-        if (!checkRateLimit(ip)) return res.status(429).json({ error: 'Слишком много попыток, подождите' });
 
         const token = randomToken();
         await kv.set('session:' + token, { ip, at: Date.now() }, { ex: 86400 });
@@ -478,7 +498,7 @@ app.get('/api/admin/banned', adminAuth, async (req, res) => {
 app.post('/api/admin/ban', adminAuth, async (req, res) => {
     try {
         const { ip, reason, until } = req.body;
-        if (!ip) return res.status(400).json({ error: 'IP required' });
+        if (!ip || !net.isIP(ip)) return res.status(400).json({ error: 'Valid IP required' });
         const blockedIPs = (await kv.get('blockedIPs')) || {};
         const banUntil = (!until || until > Date.now() + 864000000) ? Date.now() + 86400000 : until;
         blockedIPs[ip] = { reason: reason || 'Manual ban', until: banUntil, at: Date.now() };
@@ -514,7 +534,7 @@ app.get('/api/admin/banned-devices', adminAuth, async (req, res) => {
 app.post('/api/admin/ban-device', adminAuth, async (req, res) => {
     try {
         const { deviceId, reason, until } = req.body;
-        if (!deviceId) return res.status(400).json({ error: 'deviceId required' });
+        if (!deviceId || typeof deviceId !== 'string') return res.status(400).json({ error: 'deviceId required' });
         const blockedDevices = (await kv.get('blockedDevices')) || {};
         const banUntil = (!until || until > Date.now() + 864000000) ? Date.now() + 86400000 : until;
         blockedDevices[deviceId] = { reason: reason || 'Manual ban', until: banUntil, at: Date.now() };
