@@ -189,6 +189,7 @@ async function adminAuth(req, res, next) {
     try {
         const session = await kv.get('session:' + token);
         if (!session) return res.status(401).json({ error: 'Сессия истекла' });
+        if (session.ip !== getClientIP(req)) return res.status(401).json({ error: 'Сессия привязана к IP' });
         req.adminIP = session.ip;
         next();
     } catch (e) {
@@ -443,6 +444,8 @@ app.use('/api/admin', (req, res, next) => {
 app.post('/api/admin/login', async (req, res) => {
     try {
         const ip = getClientIP(req);
+        if (!checkRateLimit(ip)) return res.status(429).json({ error: 'Слишком много попыток, подождите' });
+
         const token = randomToken();
         await kv.set('session:' + token, { ip, at: Date.now() }, { ex: 86400 });
         res.json({ token });
