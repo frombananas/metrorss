@@ -171,13 +171,15 @@ function renderComments(comments, listEl) {
         return;
     }
     listEl.innerHTML = comments.map(c =>
-        '<div class="c"><span class="cd">' + new Date(c.date).toLocaleDateString('ru') + '</span>' + c.text + '</div>'
+        '<div class="c"><span class="cd">' + new Date(c.date).toLocaleDateString('ru') + '</span>' + esc(c.text) + '</div>'
     ).join('');
 }
 
 function toggleComments(commentsEl) {
     commentsEl.classList.toggle('open');
 }
+
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 async function loadNews(silent) {
     const feed = document.getElementById('feed');
@@ -187,7 +189,7 @@ async function loadNews(silent) {
         if (!res.ok) {
             const errData = await res.json().catch(() => ({}));
             if (res.status === 403 && errData.error) {
-                feed.innerHTML = '<div class="post" style="border-color:#e51400;"><p style="color:#e51400;font-weight:300;"><b>вы забанены</b>' + (errData.reason ? '<br><span style="color:#999;font-size:13px;">причина: ' + errData.reason + '</span>' : '') + (errData.deviceId ? '<br><span style="color:#555;font-size:11px;">device: ' + errData.deviceId + '</span>' : '') + '</p></div>';
+                feed.innerHTML = '<div class="post" style="border-color:#e51400;"><p style="color:#e51400;font-weight:300;"><b>вы забанены</b>' + (errData.reason ? '<br><span style="color:#999;font-size:13px;">причина: ' + esc(errData.reason) + '</span>' : '') + (errData.deviceId ? '<br><span style="color:#555;font-size:11px;">device: ' + esc(errData.deviceId) + '</span>' : '') + '</p></div>';
                 return;
             }
             throw new Error('Ошибка сервера (' + res.status + ')');
@@ -217,7 +219,7 @@ async function loadNews(silent) {
                 '</div>' +
                 '<div class="comments">' +
                     '<div class="cmt-list">' + comments.map(c =>
-                        '<div class="c"><span class="cd">' + new Date(c.date).toLocaleDateString('ru') + '</span>' + c.text + '</div>'
+                        '<div class="c"><span class="cd">' + new Date(c.date).toLocaleDateString('ru') + '</span>' + esc(c.text) + '</div>'
                     ).join('') + '</div>' +
                     '<div class="cmt-form"><input class="cmt-input" placeholder="комментарий..."><button class="cmt-send"><i class="material-icons">send</i></button></div>' +
                 '</div>' +
@@ -225,7 +227,7 @@ async function loadNews(silent) {
         }).join('');
         attachListeners();
     } catch (e) {
-        if (!silent) feed.innerHTML = '<p style="color:#e51400;font-weight:300;">не удалось загрузить ленту: ' + e.message + '</p>';
+        if (!silent) feed.innerHTML = '<p style="color:#e51400;font-weight:300;">не удалось загрузить ленту: ' + esc(e.message) + '</p>';
     }
 }
 
@@ -397,7 +399,7 @@ async function loadLiked() {
                 '</div>' +
                 '<div class="comments">' +
                     '<div class="cmt-list">' + comments.map(c =>
-                        '<div class="c"><span class="cd">' + new Date(c.date).toLocaleDateString('ru') + '</span>' + c.text + '</div>'
+                        '<div class="c"><span class="cd">' + new Date(c.date).toLocaleDateString('ru') + '</span>' + esc(c.text) + '</div>'
                     ).join('') + '</div>' +
                     '<div class="cmt-form"><input class="cmt-input" placeholder="комментарий..."><button class="cmt-send"><i class="material-icons">send</i></button></div>' +
                 '</div>' +
