@@ -127,21 +127,6 @@ async function getBlockedDevices() {
     return data;
 }
 
-let _adminPassCache = null;
-
-async function getAdminPassword() {
-    if (_adminPassCache) return _adminPassCache;
-    try {
-        _adminPassCache = (await kv.get('admin:password')) || null;
-    } catch (e) { _adminPassCache = null; }
-    return _adminPassCache;
-}
-
-async function setAdminPassword(pass) {
-    await kv.set('admin:password', pass);
-    _adminPassCache = pass;
-}
-
 // --- RATE LIMITER (in-memory) ---
 
 const loginAttempts = new Map();
@@ -458,34 +443,12 @@ app.use('/api/admin', (req, res, next) => {
 app.post('/api/admin/login', async (req, res) => {
     try {
         const ip = getClientIP(req);
-        if (!checkRateLimit(ip)) return res.status(429).json({ error: 'Слишком много попыток, подождите' });
-
-        const { password } = req.body;
-        if (!password) return res.status(400).json({ error: 'Введите пароль' });
-        const adminPass = await getAdminPassword();
-        if (!adminPass) return res.status(503).json({ error: 'Пароль не настроен. Используй /api/admin/setup' });
-        if (password !== adminPass) return res.status(403).json({ error: 'Неверный пароль' });
-
         const token = randomToken();
         await kv.set('session:' + token, { ip, at: Date.now() }, { ex: 86400 });
-
         res.json({ token });
     } catch (e) {
         res.status(500).json({ error: 'Login failed' });
     }
-});
-
-// --- SETUP (set admin password once) ---
-
-app.post('/api/admin/setup', async (req, res) => {
-    try {
-        const existing = await getAdminPassword();
-        if (existing) return res.status(403).json({ error: 'Пароль уже установлен' });
-        const { password } = req.body;
-        if (!password || password.length < 6) return res.status(400).json({ error: 'Пароль минимум 6 символов' });
-        await setAdminPassword(password);
-        res.json({ ok: true });
-    } catch (e) { res.status(500).json({ error: 'Setup failed' }); }
 });
 
 // --- ADMIN ROUTES (session required) ---
