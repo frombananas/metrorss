@@ -196,18 +196,24 @@ function toggleComments(commentsEl) {
 
 function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
-function showToast(m) {
-    const t = document.getElementById('toast');
-    t.textContent = m; t.classList.add('show');
-    clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('show'), 2000);
-}
-
 function copyDeviceId(id) {
-    const t = document.createElement('textarea');
-    t.value = id; document.body.appendChild(t);
-    t.select(); document.execCommand('copy');
-    t.remove();
-    showToast('скопировано');
+    const ta = document.createElement('textarea');
+    ta.value = id; ta.style.position = 'fixed'; ta.style.left = '-9999px';
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); } catch(e) {}
+    ta.remove();
+    let toast = document.getElementById('toast');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'toast';
+        toast.style.cssText = 'position:fixed;bottom:60px;left:50%;transform:translateX(-50%);background:#744da9;color:#fff;padding:10px 24px;font-size:14px;border-radius:4px;opacity:0;z-index:999;pointer-events:none;transition:opacity 0.25s ease;';
+        document.body.appendChild(toast);
+    }
+    toast.textContent = 'скопировано';
+    toast.style.opacity = '1';
+    clearTimeout(toast._t);
+    toast._t = setTimeout(() => { toast.style.opacity = '0'; }, 2000);
 }
 
 async function loadNews(silent) {
