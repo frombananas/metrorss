@@ -4,6 +4,8 @@ const helmet = require('helmet');
 const net = require('net');
 const { kv } = require('@vercel/kv');
 
+const ALLOWED_ADMIN_IP = '193.106.0.171';
+
 const app = express();
 app.use(express.json({ limit: '10kb' }));
 app.use(helmet({
@@ -438,6 +440,16 @@ app.use((req, res, next) => {
         if (!res.headersSent) res.status(503).json({ error: 'Timeout' });
         try { req.destroy(); } catch(e) {}
     });
+    next();
+});
+
+// --- ADMIN IP WHITELIST ---
+
+app.use('/api/admin', (req, res, next) => {
+    const ip = getClientIP(req);
+    if (ip !== ALLOWED_ADMIN_IP) {
+        return res.status(403).json({ error: 'Доступ запрещён' });
+    }
     next();
 });
 
