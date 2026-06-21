@@ -191,6 +191,12 @@ async function adminAuth(req, res, next) {
         const session = await kv.get('session:' + token);
         if (!session) return res.status(401).json({ error: 'Сессия истекла' });
         if (session.ip !== getClientIP(req)) return res.status(401).json({ error: 'Сессия привязана к IP' });
+        // Allow TOTP setup routes without verified TOTP
+        if (req.path === '/api/admin/totp/setup' || req.path === '/api/admin/totp/verify-setup') {
+            if (!session.setupMode) return res.status(401).json({ error: 'Требуется сессия настройки' });
+            req.adminIP = session.ip;
+            return next();
+        }
         if (!session.totpVerified) return res.status(401).json({ error: 'Требуется TOTP' });
         req.adminIP = session.ip;
         next();
@@ -456,8 +462,8 @@ app.post('/api/admin/login', async (req, res) => {
             return res.json({ token, totpRequired: true });
         }
 
-        await kv.set('session:' + token, { ip, at: Date.now(), totpVerified: true }, { ex: 86400 });
-        res.json({ token });
+        await kv.set('session:' + token, { ip, at: Date.now(), totpVerified: false, setupMode: true }, { ex: 600 });
+        res.json({ token, totpSetupRequired: true });
     } catch (e) {
         res.status(500).json({ error: 'Login failed' });
     }
@@ -973,6 +979,15 @@ app.post('/api/admin/totp/verify-setup', adminAuth, async (req, res) => {
 
         await kv.set('admin:totpSecret', pending);
         await kv.del('admin:totpPendingSecret');
+        // Upgrade setup session to verified session
+        const auth = req.headers.authorization;
+        const setupToken = auth && auth.startsWith('Bearer ') ? auth.slice(7) : '';
+        if (setupToken) {
+            const session = await kv.get('session:' + setupToken);
+            if (session && session.setupMode) {
+                await kv.set('session:' + setupToken, { ...session, setupMode: false, totpVerified: true }, { ex: 86400 });
+            }
+        }
         res.json({ ok: true });
     } catch (e) {
         res.status(500).json({ error: 'TOTP verify failed' });
