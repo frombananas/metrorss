@@ -204,7 +204,7 @@ async function loadNews(silent) {
         if (!res.ok) {
             const errData = await res.json().catch(() => ({}));
             if (res.status === 403 && errData.error) {
-                feed.innerHTML = '<div class="post" style="border-color:#e51400;"><p style="color:#e51400;font-weight:300;"><b>вы забанены</b>' + (errData.reason ? '<br><span style="color:#999;font-size:13px;">причина: ' + esc(errData.reason) + '</span>' : '') + (errData.deviceId ? '<br><span style="color:#555;font-size:11px;">device: ' + esc(errData.deviceId) + ' <span style="cursor:pointer;color:var(--accent);text-decoration:underline;" onclick="navigator.clipboard.writeText(\'' + esc(errData.deviceId) + '\');this.textContent=\'скопировано\'">копировать</span></span>' : '') + '</p></div>';
+                feed.innerHTML = '<div class="post" style="border-color:#e51400;"><p style="color:#e51400;font-weight:300;"><b>вы забанены</b>' + (errData.reason ? '<br><span style="color:#999;font-size:13px;">причина: ' + esc(errData.reason) + '</span>' : '') + (errData.deviceId ? '<br><span style="color:#555;font-size:11px;">device: ' + esc(errData.deviceId) + ' <span style="cursor:pointer;color:var(--accent);text-decoration:underline;" onclick="var t=document.createElement(\'textarea\');t.value=\'' + esc(errData.deviceId) + '\';document.body.appendChild(t);t.select();document.execCommand(\'copy\');t.remove();this.textContent=\'скопировано\'">копировать</span></span>' : '') + '</p></div>';
                 return;
             }
             throw new Error('Ошибка сервера (' + res.status + ')');
