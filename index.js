@@ -58,7 +58,7 @@ function getClientIP(req) {
 
 // --- HELPERS ---
 
-const banWords = ['crypto', 'sparkwtf', '@sparkwtf', 'casino', 'slots', 'azino', 'азино', 'виннер', 't.me', 'telegram.me', '@xukuvu'];
+const banWords = ['crypto', 'casino', 'slots', 'azino', 'азино', 'виннер', 't.me', 'telegram.me'];
 
 async function containsBanWords(text) {
     const lowerText = text.toLowerCase();
