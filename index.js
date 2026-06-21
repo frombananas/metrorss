@@ -563,6 +563,10 @@ app.get('/api/admin/search', adminAuth, async (req, res) => {
 
 // --- ROUTES ---
 
+app.get('/admin', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+});
+
 app.get('/api/health', async (req, res) => {
     let kvOk = false;
     try {
