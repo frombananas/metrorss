@@ -60,6 +60,11 @@ function getExtraFP() {
         navigator.deviceMemory || '',
         navigator.maxTouchPoints,
         navigator.languages ? navigator.languages.join(',') : '',
+        navigator.plugins ? navigator.plugins.length : '',
+        navigator.mimeTypes ? navigator.mimeTypes.length : '',
+        screen.availWidth + 'x' + screen.availHeight,
+        screen.pixelDepth,
+        navigator.productSub || '',
         getCanvasFP(),
         getWebGLFP()
     ];
@@ -70,8 +75,8 @@ function getDeviceID() {
     let id = localStorage.getItem('_did') || sessionStorage.getItem('_did') || getCookie('_did');
     if (!id) {
         const extra = getExtraFP();
-        const base = [navigator.userAgent, screen.width + 'x' + screen.height, screen.colorDepth, navigator.language, Intl.DateTimeFormat().resolvedOptions().timeZone].join('|');
-        id = 'd_' + hashStr(base + '|' + extra);
+        const base = [navigator.userAgent, screen.width + 'x' + screen.height, screen.colorDepth, navigator.language, Intl.DateTimeFormat().resolvedOptions().timeZone, navigator.hardwareConcurrency || ''].join('|');
+        id = 'd2_' + hashStr(base + '|' + extra);
     }
     saveDeviceID(id);
     return id;

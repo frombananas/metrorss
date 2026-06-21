@@ -159,7 +159,9 @@ async function adminAuth(req, res, next) {
 // --- DEVICE ID HELPER ---
 
 function getDeviceID(req) {
-    return req.headers['x-device-id'] || '';
+    const id = req.headers['x-device-id'] || '';
+    if (id && !id.startsWith('d_') && !id.startsWith('d2_')) return '';
+    return id;
 }
 
 // --- IP + DEVICE BAN MIDDLEWARE ---
@@ -180,6 +182,18 @@ app.use(async (req, res, next) => {
             const dban = blockedDevices[deviceId];
             if (dban && dban.until > Date.now()) {
                 return res.status(403).json({ error: 'вы забанены', reason: dban.reason || 'без причины', deviceId });
+            }
+
+            const devicesPerIP = (await kv.get('devicesPerIP:' + ip)) || {};
+            if (!devicesPerIP[deviceId]) {
+                devicesPerIP[deviceId] = Date.now();
+                if (Object.keys(devicesPerIP).length > 5) {
+                    const banned = (await kv.get('blockedIPs')) || {};
+                    banned[ip] = { until: Date.now() + 86400000, reason: 'автобан: смена deviceID' };
+                    await kv.set('blockedIPs', banned);
+                    return res.status(403).json({ error: 'вы забанены', reason: 'Слишком много устройств с одного IP', deviceId });
+                }
+                await kv.set('devicesPerIP:' + ip, devicesPerIP, { ex: 86400 });
             }
         }
     } catch (e) {}
