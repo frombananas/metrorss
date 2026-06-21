@@ -18,15 +18,32 @@ function getCanvasFP() {
         const c = document.createElement('canvas');
         c.width = 256; c.height = 128;
         const ctx = c.getContext('2d');
-        ctx.textBaseline = 'top';
+        ctx.textBaseline = 'alphabetic';
         ctx.font = '14px Arial';
         ctx.fillStyle = '#f60';
         ctx.fillRect(10, 10, 60, 60);
         ctx.fillStyle = '#069';
-        ctx.fillText('metrorss', 5, 40);
+        ctx.fillText('C=π·d', 5, 40);
         ctx.fillStyle = '#444';
         ctx.font = '12px monospace';
         ctx.fillText(navigator.userAgent.slice(-8), 5, 70);
+        ctx.font = 'bold 20px Georgia';
+        ctx.fillStyle = '#2a9';
+        ctx.fillText('g@', 120, 50);
+        ctx.strokeStyle = '#e3a87e';
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.arc(200, 60, 28, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.fillStyle = 'rgba(200,40,80,0.25)';
+        ctx.beginPath();
+        ctx.ellipse(35, 100, 42, 18, 0.3, 0, Math.PI * 2);
+        ctx.fill();
+        const grad = ctx.createLinearGradient(120, 0, 220, 0);
+        grad.addColorStop(0, '#a0f');
+        grad.addColorStop(1, '#0af');
+        ctx.fillStyle = grad;
+        ctx.fillRect(140, 90, 60, 25);
         return hashStr(c.toDataURL());
     } catch(e) { return ''; }
 }
@@ -44,7 +61,14 @@ function getSignalString() {
         navigator.deviceMemory || '',
         navigator.maxTouchPoints,
         getCanvasFP(),
-        navigator.webdriver || ''
+        navigator.webdriver || '',
+        navigator.vendor || '',
+        window.devicePixelRatio || '',
+        screen.availWidth + 'x' + screen.availHeight,
+        screen.pixelDepth || '',
+        (screen.orientation ? screen.orientation.type : '') || '',
+        (navigator.plugins ? navigator.plugins.length : '') || '',
+        navigator.productSub || ''
     ];
     return parts.join('|');
 }
