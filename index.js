@@ -119,9 +119,19 @@ async function getBlockedDevices() {
     return data;
 }
 
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
-if (!ADMIN_PASSWORD) {
-    console.error('ADMIN_PASSWORD not set — admin login disabled');
+let _adminPassCache = null;
+
+async function getAdminPassword() {
+    if (_adminPassCache) return _adminPassCache;
+    try {
+        _adminPassCache = (await kv.get('admin:password')) || null;
+    } catch (e) { _adminPassCache = null; }
+    return _adminPassCache;
+}
+
+async function setAdminPassword(pass) {
+    await kv.set('admin:password', pass);
+    _adminPassCache = pass;
 }
 
 // --- RATE LIMITER (in-memory) ---
@@ -434,7 +444,9 @@ app.post('/api/admin/login', async (req, res) => {
 
         const { password } = req.body;
         if (!password) return res.status(400).json({ error: 'Введите пароль' });
-        if (password !== ADMIN_PASSWORD) return res.status(403).json({ error: 'Неверный пароль' });
+        const adminPass = await getAdminPassword();
+        if (!adminPass) return res.status(503).json({ error: 'Пароль не настроен. Используй /api/admin/setup' });
+        if (password !== adminPass) return res.status(403).json({ error: 'Неверный пароль' });
 
         const token = randomToken();
         await kv.set('session:' + token, { ip, at: Date.now() }, { ex: 86400 });
@@ -443,6 +455,19 @@ app.post('/api/admin/login', async (req, res) => {
     } catch (e) {
         res.status(500).json({ error: 'Login failed' });
     }
+});
+
+// --- SETUP (set admin password once) ---
+
+app.post('/api/admin/setup', async (req, res) => {
+    try {
+        const existing = await getAdminPassword();
+        if (existing) return res.status(403).json({ error: 'Пароль уже установлен' });
+        const { password } = req.body;
+        if (!password || password.length < 6) return res.status(400).json({ error: 'Пароль минимум 6 символов' });
+        await setAdminPassword(password);
+        res.json({ ok: true });
+    } catch (e) { res.status(500).json({ error: 'Setup failed' }); }
 });
 
 // --- ADMIN ROUTES (session required) ---
