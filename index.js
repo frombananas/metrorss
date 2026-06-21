@@ -3,6 +3,7 @@ const path = require('path');
 const helmet = require('helmet');
 const net = require('net');
 const { kv } = require('@vercel/kv');
+const speakeasy = require('speakeasy');
 
 const ALLOWED_ADMIN_IP = '193.106.0.171';
 
@@ -190,6 +191,7 @@ async function adminAuth(req, res, next) {
         const session = await kv.get('session:' + token);
         if (!session) return res.status(401).json({ error: 'Сессия истекла' });
         if (session.ip !== getClientIP(req)) return res.status(401).json({ error: 'Сессия привязана к IP' });
+        if (!session.totpVerified) return res.status(401).json({ error: 'Требуется TOTP' });
         req.adminIP = session.ip;
         next();
     } catch (e) {
@@ -446,8 +448,15 @@ app.post('/api/admin/login', async (req, res) => {
         const ip = getClientIP(req);
         if (!checkRateLimit(ip)) return res.status(429).json({ error: 'Слишком много попыток, подождите' });
 
+        const totpSecret = await kv.get('admin:totpSecret');
         const token = randomToken();
-        await kv.set('session:' + token, { ip, at: Date.now() }, { ex: 86400 });
+
+        if (totpSecret) {
+            await kv.set('session:' + token, { ip, at: Date.now(), totpVerified: false }, { ex: 600 });
+            return res.json({ token, totpRequired: true });
+        }
+
+        await kv.set('session:' + token, { ip, at: Date.now(), totpVerified: true }, { ex: 86400 });
         res.json({ token });
     } catch (e) {
         res.status(500).json({ error: 'Login failed' });
@@ -924,6 +933,79 @@ app.get('/rss', async (req, res) => {
     } catch (e) {
         console.error('/rss error:', e);
         res.status(500).send('RSS error');
+    }
+});
+
+// --- TOTP (Google Authenticator) ---
+
+app.get('/api/admin/totp/status', adminAuth, async (req, res) => {
+    try {
+        const secret = await kv.get('admin:totpSecret');
+        res.json({ enabled: !!secret });
+    } catch (e) {
+        res.status(500).json({ error: 'TOTP status failed' });
+    }
+});
+
+app.post('/api/admin/totp/setup', adminAuth, async (req, res) => {
+    try {
+        if (await kv.get('admin:totpSecret')) {
+            return res.status(400).json({ error: 'TOTP уже настроен' });
+        }
+        const secret = speakeasy.generateSecret({ name: 'MetroRSS Admin', length: 20 });
+        await kv.set('admin:totpPendingSecret', secret.base32, { ex: 300 });
+        res.json({ secret: secret.base32, uri: secret.otpauth_url });
+    } catch (e) {
+        res.status(500).json({ error: 'TOTP setup failed' });
+    }
+});
+
+app.post('/api/admin/totp/verify-setup', adminAuth, async (req, res) => {
+    try {
+        const { code } = req.body;
+        if (!code) return res.status(400).json({ error: 'Введите код' });
+
+        const pending = await kv.get('admin:totpPendingSecret');
+        if (!pending) return res.status(400).json({ error: 'Сначала запросите настройку' });
+
+        const verified = speakeasy.totp.verify({ secret: pending, encoding: 'base32', token: code, window: 2 });
+        if (!verified) return res.status(400).json({ error: 'Неверный код' });
+
+        await kv.set('admin:totpSecret', pending);
+        await kv.del('admin:totpPendingSecret');
+        res.json({ ok: true });
+    } catch (e) {
+        res.status(500).json({ error: 'TOTP verify failed' });
+    }
+});
+
+app.post('/api/admin/totp/verify', async (req, res) => {
+    try {
+        const { token, code } = req.body;
+        if (!token || !code) return res.status(400).json({ error: 'Токен и код обязательны' });
+
+        const session = await kv.get('session:' + token);
+        if (!session) return res.status(401).json({ error: 'Сессия истекла' });
+
+        const secret = await kv.get('admin:totpSecret');
+        if (!secret) return res.status(400).json({ error: 'TOTP не настроен' });
+
+        const verified = speakeasy.totp.verify({ secret, encoding: 'base32', token: code, window: 2 });
+        if (!verified) return res.status(400).json({ error: 'Неверный код' });
+
+        await kv.set('session:' + token, { ...session, totpVerified: true }, { ex: 86400 });
+        res.json({ ok: true });
+    } catch (e) {
+        res.status(500).json({ error: 'TOTP verify failed' });
+    }
+});
+
+app.post('/api/admin/totp/disable', adminAuth, async (req, res) => {
+    try {
+        await kv.del('admin:totpSecret');
+        res.json({ ok: true });
+    } catch (e) {
+        res.status(500).json({ error: 'TOTP disable failed' });
     }
 });
 

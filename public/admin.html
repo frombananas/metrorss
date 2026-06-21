@@ -85,6 +85,13 @@
         <div class="login-error" id="login-error"></div>
     </div>
 
+    <div class="login-box" id="totp-box" style="display:none;">
+        <h3>код из Google Authenticator</h3>
+        <input id="totp-code" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="000000">
+        <button class="login-btn" id="totp-btn">подтвердить</button>
+        <div class="login-error" id="totp-error"></div>
+    </div>
+
     <div class="dashboard" id="dashboard">
         <div class="stats-grid" id="stats"></div>
 
@@ -95,6 +102,7 @@
             <button class="tab-btn" data-tab="devices">баны device</button>
             <button class="tab-btn" data-tab="banwords">слова</button>
             <button class="tab-btn" data-tab="emergency">экстренное</button>
+            <button class="tab-btn" data-tab="security">безопасность</button>
             <button class="tab-btn" data-tab="danger">опасная зона</button>
         </div>
 
@@ -163,6 +171,23 @@
             </div>
         </div>
 
+        <div class="tab-content" id="tab-security">
+            <div class="emergency-box" style="border-color:var(--accent);">
+                <div class="emergency-header" style="color:var(--accent);">🔐 Google Authenticator</div>
+                <div id="totp-status"></div>
+                <div id="totp-setup-area" style="display:none;">
+                    <p style="color:#aaa;font-size:14px;margin-bottom:12px;">Отсканируй QR-код или введи ключ вручную в Google Authenticator, затем введи код для подтверждения:</p>
+                    <div id="totp-qr-area" style="text-align:center;margin-bottom:15px;"></div>
+                    <div id="totp-secret-text" style="font-family:monospace;font-size:13px;color:#e3a87e;text-align:center;margin-bottom:15px;word-break:break-all;"></div>
+                    <div class="ban-form">
+                        <input id="totp-setup-code" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="000000">
+                        <button id="totp-setup-btn">подтвердить</button>
+                    </div>
+                    <div id="totp-setup-error" style="color:#e51400;font-size:13px;margin-top:5px;"></div>
+                </div>
+            </div>
+        </div>
+
         <div class="tab-content" id="tab-danger">
             <div class="danger-zone">
                 <h4>⚠️ опасная зона</h4>
@@ -199,10 +224,13 @@
                     if (status === 200) {
                         token = data.token;
                         localStorage.setItem('adminToken', token);
-                        document.getElementById('login-box').style.display = 'none';
-                        document.getElementById('dashboard').style.display = 'block';
-                        loadStats(); loadPosts(); loadBans(); loadDeviceBans(); loadEmergency(); loadComments(); loadBanwords();
-                        if (cb) cb();
+                        if (data.totpRequired) {
+                            document.getElementById('login-box').style.display = 'none';
+                            document.getElementById('totp-box').style.display = 'block';
+                            document.getElementById('totp-code').focus();
+                            return;
+                        }
+                        showDashboard(cb);
                     } else {
                         document.getElementById('login-error').textContent = data.error || 'Ошибка';
                         document.getElementById('login-error').style.display = 'block';
@@ -215,12 +243,39 @@
                 });
         }
 
+        function doTOTP() {
+            const code = document.getElementById('totp-code').value.trim();
+            if (!code) return;
+            fetch('/api/admin/totp/verify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token, code })
+            }).then(r => r.json()).then(d => {
+                if (d.ok) {
+                    document.getElementById('totp-box').style.display = 'none';
+                    showDashboard();
+                } else {
+                    document.getElementById('totp-error').textContent = d.error || 'Неверный код';
+                    document.getElementById('totp-error').style.display = 'block';
+                }
+            }).catch(() => {
+                document.getElementById('totp-error').textContent = 'Ошибка соединения';
+                document.getElementById('totp-error').style.display = 'block';
+            });
+        }
+
+        function showDashboard(cb) {
+            document.getElementById('login-box').style.display = 'none';
+            document.getElementById('dashboard').style.display = 'block';
+            loadStats(); loadPosts(); loadBans(); loadDeviceBans(); loadEmergency(); loadComments(); loadBanwords();
+            loadTOTPStatus();
+            if (cb) cb();
+        }
+
         if (token) {
             try {
                 api('/api/admin/stats').then(() => {
-                    document.getElementById('login-box').style.display = 'none';
-                    document.getElementById('dashboard').style.display = 'block';
-                    loadStats(); loadPosts(); loadBans(); loadDeviceBans(); loadEmergency(); loadComments(); loadBanwords();
+                    showDashboard();
                 }).catch(() => {
                     localStorage.removeItem('adminToken');
                     token = '';
@@ -591,6 +646,57 @@
                     });
                 });
             }).catch(() => { el.innerHTML = '<p style="color:#e51400;">ошибка поиска</p>'; });
+        });
+
+        // --- TOTP ---
+        function loadTOTPStatus() {
+            api('/api/admin/totp/status').then(d => {
+                const el = document.getElementById('totp-status');
+                if (d.enabled) {
+                    el.innerHTML = '<p style="color:#6a6;">✅ TOTP включён</p><button class="danger-btn" id="btn-totp-disable" style="margin-top:8px;">🗑 отключить TOTP</button>';
+                    document.getElementById('totp-setup-area').style.display = 'none';
+                    document.getElementById('btn-totp-disable').addEventListener('click', () => {
+                        if (!confirm('Отключить TOTP?')) return;
+                        api('/api/admin/totp/disable', { method: 'POST' }).then(() => loadTOTPStatus());
+                    });
+                } else {
+                    el.innerHTML = '<p style="color:#c44;">❌ TOTP выключен</p><button class="login-btn" id="btn-totp-setup" style="margin-top:8px;">🔐 настроить TOTP</button>';
+                    document.getElementById('btn-totp-setup').addEventListener('click', () => {
+                        api('/api/admin/totp/setup', { method: 'POST' }).then(d => {
+                            document.getElementById('totp-setup-area').style.display = 'block';
+                            document.getElementById('totp-qr-area').innerHTML = '<img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(d.uri) + '" alt="QR-код" style="border:4px solid #333;border-radius:8px;">';
+                            document.getElementById('totp-secret-text').textContent = 'Ключ: ' + d.secret;
+                            document.getElementById('totp-setup-btn').disabled = false;
+                            document.getElementById('totp-setup-code').focus();
+                        });
+                    });
+                }
+            });
+        }
+
+        document.getElementById('totp-btn').addEventListener('click', doTOTP);
+        document.getElementById('totp-code').addEventListener('keydown', e => { if (e.key === 'Enter') doTOTP(); });
+        document.getElementById('totp-setup-btn').addEventListener('click', () => {
+            const code = document.getElementById('totp-setup-code').value.trim();
+            if (!code) return;
+            document.getElementById('totp-setup-btn').disabled = true;
+            api('/api/admin/totp/verify-setup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code }) })
+                .then(d => {
+                    if (d.ok) {
+                        document.getElementById('totp-setup-area').style.display = 'none';
+                        document.getElementById('totp-setup-code').value = '';
+                        loadTOTPStatus();
+                    } else {
+                        document.getElementById('totp-setup-error').textContent = d.error || 'Ошибка';
+                        document.getElementById('totp-setup-btn').disabled = false;
+                    }
+                }).catch(() => {
+                    document.getElementById('totp-setup-error').textContent = 'Ошибка соединения';
+                    document.getElementById('totp-setup-btn').disabled = false;
+                });
+        });
+        document.getElementById('totp-setup-code').addEventListener('keydown', e => {
+            if (e.key === 'Enter') document.getElementById('totp-setup-btn').click();
         });
     </script>
 </body>
