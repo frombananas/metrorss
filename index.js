@@ -574,7 +574,7 @@ app.get('/api/liked-by-device', async (req, res) => {
 app.post('/api/posts', async (req, res) => {
     try {
         const ip = getClientIP(req);
-        if (!checkActionLimit(ip, 'post', 3, 120000)) {
+        if (!checkActionLimit(ip, 'post', 2, 120000)) {
             return res.status(429).json({ error: 'Слишком много постов, подожди 2 минуты' });
         }
 
@@ -596,6 +596,13 @@ app.post('/api/posts', async (req, res) => {
 
         const spamTokens = cleanTitle.split(/\s+/).filter(t => t.length >= 3 && /^@?[a-zA-Z0-9]+$/.test(t));
         if (spamTokens.length >= 3) {
+            const spamStrikes = (await kv.get('spamStrike:' + ip)) || 0;
+            await kv.set('spamStrike:' + ip, spamStrikes + 1, { ex: 86400 });
+            if (spamStrikes + 1 >= 3) {
+                const banned = (await kv.get('blockedIPs')) || {};
+                banned[ip] = { until: Date.now() + 86400000, reason: 'автобан: спам заголовками' };
+                await kv.set('blockedIPs', banned);
+            }
             return res.status(403).json({ error: 'Спам-детект' });
         }
 
