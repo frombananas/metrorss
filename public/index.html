@@ -97,17 +97,17 @@
         .comments.open { max-height: 500px; overflow-y: auto; margin-top: 10px; }
         .c { font-size: 13px; color: #999; padding: 4px 0; border-bottom: 1px solid #181818; }
         .cd { color: #555; margin-right: 8px; font-size: 11px; }
-        .cmt-form { margin-top: 8px; }
+        .cmt-form { margin-top: 8px; white-space: nowrap; }
         .cmt-input {
             display: inline-block; background: #111; color: #fff; border: 1px solid #333;
-            padding: 4px 10px; font-size: 13px; font-family: inherit; width: 70%;
-            vertical-align: middle; user-select: text; transition: border-color 0.2s;
+            padding: 4px 10px; font-size: 13px; font-family: inherit;
+            width: calc(100% - 40px); vertical-align: middle; user-select: text; transition: border-color 0.2s;
         }
         .cmt-input:focus { outline: none; border-color: #744da9; border-color: var(--accent); }
         .cmt-send {
             background: #744da9; background: var(--accent);
-            border: none; color: #fff; padding: 2px 6px; cursor: pointer;
-            display: inline-block; vertical-align: middle;
+            border: none; color: #fff; padding: 5px 8px; cursor: pointer;
+            display: inline-block; vertical-align: middle; height: 28px;
         }
         .cmt-send .material-icons { font-size: 14px; vertical-align: middle; }
         .emergency-banner {
