@@ -456,6 +456,7 @@ app.use('/api/admin', (req, res, next) => {
 // CSRF protection for mutating admin routes
 app.use('/api/admin', async (req, res, next) => {
     if (req.method === 'GET' || req.method === 'HEAD' || req.method === 'OPTIONS') return next();
+    if (req.path === '/api/admin/login' || req.path === '/api/admin/totp/verify') return next();
     const csrf = req.headers['x-csrf-token'];
     if (!csrf || csrf.length < 8 || csrf.length > 128) {
         return res.status(403).json({ error: 'CSRF validation failed' });
