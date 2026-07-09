@@ -2,76 +2,74 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>metroRSS — админ</title>
     <link rel="icon" type="image/x-icon" href="/favicon.png">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <style>
-        :root { --win-bg: #000000; --win-fg: #ffffff; --accent: #744da9; --ease-wp: cubic-bezier(0.1, 0.9, 0.2, 1); }
-        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; user-select: none; }
-        body { background: var(--win-bg); color: var(--win-fg); font-family: 'Segoe WP', 'Segoe UI', sans-serif; padding: calc(40px + env(safe-area-inset-top, 0px)) 24px 40px 24px; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: #000000; color: #ffffff; font-family: 'Segoe WP', 'Segoe UI', sans-serif; padding: 40px 24px 40px 24px; }
         .page-header { margin-bottom: 35px; }
-        .page-title { font-size: 54px; font-weight: 200; letter-spacing: -2px; display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap; }
-        .page-subtitle { font-size: 16px; color: var(--accent); text-transform: uppercase; font-weight: 600; letter-spacing: 1px; }
-        .back-link { color: var(--accent); text-decoration: none; font-size: 16px; font-weight: 400; text-transform: lowercase; border: 2px solid var(--accent); padding: 10px 16px; margin-top: -12px; transition: all 0.15s ease; display: inline-flex; align-items: center; gap: 8px; }
-        .back-link:hover { color: white; background: var(--accent); }
-        .login-box { border: 2px solid var(--accent); padding: 24px; background: #0a0a0a; max-width: 400px; margin: 0 auto; animation: wpListIn 0.5s var(--ease-wp) both; }
+        .page-title { font-size: 54px; font-weight: 200; letter-spacing: -2px; }
+        .page-subtitle { font-size: 16px; color: #744da9; text-transform: uppercase; font-weight: 600; letter-spacing: 1px; }
+        .back-link { color: #744da9; text-decoration: none; font-size: 16px; font-weight: 400; text-transform: lowercase; border: 2px solid #744da9; padding: 10px 16px; display: inline-block; margin-top: -12px; }
+        .back-link:hover { color: white; background: #744da9; }
+        .login-box { border: 2px solid #744da9; padding: 24px; background: #0a0a0a; max-width: 400px; margin: 0 auto; }
         .login-box h3 { font-size: 24px; font-weight: 200; text-transform: lowercase; margin-bottom: 15px; }
-        .login-box input { display: block; width: 100%; margin-bottom: 15px; background: #111; color: #fff; border: 2px solid #444; padding: 12px; font-size: 16px; font-family: inherit; font-weight: 300; transition: border-color 0.2s; user-select: text; }
-        .login-box input:focus { outline: none; border-color: var(--win-fg); }
-        .login-btn { background: var(--accent); border: 2px solid var(--accent); color: white; padding: 10px 25px; font-size: 15px; font-weight: 400; cursor: pointer; text-transform: lowercase; transition: all 0.15s ease; }
-        .login-btn:hover { background: transparent; color: var(--accent); }
+        .login-box input { display: block; width: 100%; margin-bottom: 15px; background: #111; color: #fff; border: 2px solid #444; padding: 12px; font-size: 16px; font-family: inherit; font-weight: 300; }
+        .login-box input:focus { outline: none; border-color: #ffffff; }
+        .login-btn { background: #744da9; border: 2px solid #744da9; color: white; padding: 10px 25px; font-size: 15px; font-weight: 400; cursor: pointer; text-transform: lowercase; }
+        .login-btn:hover { background: transparent; color: #744da9; }
         .login-btn:disabled { opacity: 0.4; cursor: not-allowed; }
         .login-error { color: #e51400; font-size: 13px; margin-top: 10px; display: none; }
         .dashboard { display: none; }
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 30px; }
-        .stat-card { border: 2px solid var(--accent); padding: 20px; background: #0a0a0a; text-align: center; }
-        .stat-card .num { font-size: 36px; font-weight: 200; color: var(--accent); }
+        .stats-grid { margin-bottom: 30px; }
+        .stat-card { border: 2px solid #744da9; padding: 20px; background: #0a0a0a; text-align: center; display: inline-block; width: 22%; min-width: 120px; margin-right: 8px; margin-bottom: 8px; vertical-align: top; }
+        .stat-card .num { font-size: 36px; font-weight: 200; color: #744da9; }
         .stat-card .label { font-size: 13px; color: #999; text-transform: lowercase; margin-top: 6px; }
-        .tab-bar { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
-        .tab-btn { background: none; border: 2px solid #333; color: white; padding: 8px 18px; font-size: 14px; cursor: pointer; font-family: inherit; text-transform: lowercase; transition: all 0.2s; }
-        .tab-btn:hover, .tab-btn.active { border-color: var(--accent); color: var(--accent); }
+        .tab-bar { margin-bottom: 20px; }
+        .tab-btn { background: none; border: 2px solid #333; color: white; padding: 8px 18px; font-size: 14px; cursor: pointer; font-family: inherit; text-transform: lowercase; margin-right: 4px; margin-bottom: 4px; }
+        .tab-btn:hover, .tab-btn.active { border-color: #744da9; color: #744da9; }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
-        .post-item, .ban-item { border: 1px solid #222; padding: 14px; margin-bottom: 8px; background: #050505; display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; animation: wpListIn 0.3s var(--ease-wp) both; }
-        .post-item .info, .ban-item .info { flex: 1; }
-        .post-item .title { font-size: 16px; font-weight: 300; color: var(--accent); }
+        .post-item, .ban-item { border: 1px solid #222; padding: 14px; margin-bottom: 8px; background: #050505; }
+        .post-item .info, .ban-item .info { }
+        .post-item .title { font-size: 16px; font-weight: 300; color: #744da9; }
         .post-item .meta { font-size: 12px; color: #666; margin-top: 4px; word-break: break-all; }
         .device-id { font-family: 'Consolas', monospace; font-size: 10px; color: #e3a87e; word-break: break-all; }
-        .label-badge { display: inline-block; font-size: 10px; padding: 1px 6px; margin: 1px 2px; border-radius: 0; font-family: 'Consolas', monospace; letter-spacing: 0.5px; vertical-align: middle; cursor: default; }
+        .label-badge { display: inline-block; font-size: 10px; padding: 1px 6px; margin: 1px 2px; font-family: 'Consolas', monospace; }
         .label-badge.ip { background: #1a1a2e; color: #7ec8e3; border: 1px solid #2a3a5e; }
         .label-badge.device { background: #2e1a1a; color: #e3a87e; border: 1px solid #5e2a2a; word-break: break-all; max-width: 180px; }
-        .ban-btn { background: none; border: 1px solid #744da9; color: #744da9; padding: 4px 12px; font-size: 12px; cursor: pointer; font-family: inherit; transition: all 0.2s; }
+        .ban-btn { background: none; border: 1px solid #744da9; color: #744da9; padding: 4px 12px; font-size: 12px; cursor: pointer; font-family: inherit; margin-right: 4px; }
         .ban-btn:hover { background: #744da9; color: white; }
-        .ban-item .ip { font-size: 14px; color: var(--accent); font-weight: 300; }
+        .ban-item .ip { font-size: 14px; color: #744da9; font-weight: 300; }
         .ban-item .reason { font-size: 12px; color: #999; margin-top: 4px; }
-        .del-btn, .unban-btn { background: none; border: 1px solid #e51400; color: #e51400; padding: 4px 12px; font-size: 12px; cursor: pointer; font-family: inherit; transition: all 0.2s; }
-        .post-actions { display: flex; gap: 6px; flex-shrink: 0; }
-        .ban-btn { background: none; border: 1px solid #744da9; color: #744da9; padding: 4px 12px; font-size: 12px; cursor: pointer; font-family: inherit; transition: all 0.2s; }
-        .ban-btn:hover { background: #744da9; color: white; }
+        .del-btn, .unban-btn { background: none; border: 1px solid #e51400; color: #e51400; padding: 4px 12px; font-size: 12px; cursor: pointer; font-family: inherit; margin-right: 4px; }
+        .del-btn:hover, .unban-btn:hover { background: #e51400; color: white; }
+        .post-actions { margin-top: 8px; }
         .emergency-box { border: 2px solid #e51400; padding: 16px; background: #0a0505; }
+        .emergency-box.sec { border-color: #744da9; }
         .emergency-header { color: #e51400; font-size: 16px; font-weight: 200; text-transform: lowercase; margin-bottom: 10px; }
-        .emergency-box textarea { width: 100%; min-height: 60px; background: #111; color: #fff; border: 1px solid #333; padding: 10px; font-size: 14px; font-family: inherit; resize: vertical; user-select: text; }
-        .emergency-box textarea:focus { outline: none; border-color: var(--accent); }
-        .emergency-actions { display: flex; gap: 10px; align-items: center; margin-top: 10px; }
+        .emergency-header.sec { color: #744da9; }
+        .emergency-box textarea { width: 100%; min-height: 60px; background: #111; color: #fff; border: 1px solid #333; padding: 10px; font-size: 14px; font-family: inherit; resize: vertical; }
+        .emergency-box textarea:focus { outline: none; border-color: #744da9; }
+        .emergency-actions { margin-top: 10px; }
         .emergency-status { font-size: 12px; color: #666; }
         .danger-zone { border: 2px solid #e51400; padding: 20px; margin-top: 0; background: #0a0505; }
         .danger-zone h4 { color: #e51400; font-size: 18px; font-weight: 200; text-transform: lowercase; margin-bottom: 12px; }
-        .danger-zone .btn-row { display: flex; gap: 10px; flex-wrap: wrap; }
-        .danger-btn { background: #e51400; border: 1px solid #e51400; color: white; padding: 8px 16px; font-size: 13px; cursor: pointer; font-family: inherit; text-transform: lowercase; transition: all 0.2s; }
+        .danger-btn { background: #e51400; border: 1px solid #e51400; color: white; padding: 8px 16px; font-size: 13px; cursor: pointer; font-family: inherit; text-transform: lowercase; margin-right: 6px; margin-bottom: 6px; }
         .danger-btn:hover { background: transparent; color: #e51400; }
         .danger-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-        .del-btn:hover, .unban-btn:hover { background: #e51400; color: white; }
-        .ban-form { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
-        .search-bar { display: flex; gap: 8px; margin-bottom: 15px; }
-        .search-bar input { flex: 1; min-width: 100px; background: #111; color: #fff; border: 1px solid #333; padding: 8px 12px; font-size: 13px; font-family: inherit; user-select: text; }
-        .search-bar input:focus { outline: none; border-color: var(--accent); }
-        .search-bar button { background: var(--accent); border: none; color: white; padding: 8px 16px; cursor: pointer; font-family: inherit; font-size: 13px; text-transform: lowercase; }
-        .ban-form input { flex: 1; min-width: 120px; background: #111; color: #fff; border: 1px solid #333; padding: 8px 12px; font-size: 13px; font-family: inherit; user-select: text; }
-        .ban-form input:focus { outline: none; border-color: var(--accent); }
-        .ban-form button { background: var(--accent); border: none; color: white; padding: 8px 16px; cursor: pointer; font-family: inherit; font-size: 13px; text-transform: lowercase; }
+        .ban-form { margin-bottom: 15px; }
+        .ban-form input { background: #111; color: #fff; border: 1px solid #333; padding: 8px 12px; font-size: 13px; font-family: inherit; margin-right: 6px; margin-bottom: 6px; }
+        .ban-form input:focus { outline: none; border-color: #744da9; }
+        .ban-form button { background: #744da9; border: none; color: white; padding: 8px 16px; cursor: pointer; font-family: inherit; font-size: 13px; text-transform: lowercase; }
+        .ban-form select { background: #111; color: #fff; border: 1px solid #333; padding: 8px 12px; font-size: 13px; font-family: inherit; margin-right: 6px; }
+        .search-bar input { background: #111; color: #fff; border: 1px solid #333; padding: 8px 12px; font-size: 13px; font-family: inherit; margin-right: 6px; }
+        .search-bar input:focus { outline: none; border-color: #744da9; }
+        .search-bar button { background: #744da9; border: none; color: white; padding: 8px 16px; cursor: pointer; font-family: inherit; font-size: 13px; text-transform: lowercase; }
         .loader { text-align: center; padding: 40px; color: #666; }
-        @keyframes wpListIn { from { transform: translateX(50px) rotateY(-15deg); opacity: 0; } to { transform: translateX(0) rotateY(0deg); opacity: 1; } }
     </style>
 </head>
 <body>
@@ -87,7 +85,7 @@
 
     <div class="login-box" id="totp-box" style="display:none;">
         <h3>код из Google Authenticator</h3>
-        <input id="totp-code" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="000000">
+        <input id="totp-code" type="text" maxlength="6" placeholder="000000">
         <button class="login-btn" id="totp-btn">подтвердить</button>
         <div class="login-error" id="totp-error"></div>
     </div>
@@ -97,7 +95,7 @@
         <p style="font-size:13px;color:#999;margin-bottom:15px;">Сканируй QR-код в Google Authenticator и введи код</p>
         <div id="totp-setup-qr" style="text-align:center;margin-bottom:15px;"></div>
         <div id="totp-setup-secret" style="font-family:monospace;font-size:13px;color:#e3a87e;text-align:center;margin-bottom:15px;word-break:break-all;"></div>
-        <input id="totp-setup-code-input" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="000000">
+        <input id="totp-setup-code-input" type="text" maxlength="6" placeholder="000000">
         <button class="login-btn" id="totp-setup-submit">подтвердить</button>
         <div class="login-error" id="totp-setup-error"></div>
     </div>
@@ -120,25 +118,22 @@
             <div class="search-bar"><input id="post-search" placeholder="поиск по постам..." maxlength="100"><button id="post-search-btn">найти</button></div>
             <div id="posts-list"></div>
         </div>
-
         <div class="tab-content" id="tab-comments">
             <div id="comments-list"></div>
         </div>
-
         <div class="tab-content" id="tab-banwords">
             <div class="ban-form">
                 <textarea id="banwords-text" placeholder="слова через запятую" style="min-height:80px;font-size:13px;"></textarea>
                 <button id="banwords-save">сохранить</button>
-                <span id="banwords-status" style="color:#666;font-size:12px;margin-left:8px;"></span>
+                <span id="banwords-status" style="color:#666;font-size:12px;"></span>
             </div>
-            <p style="color:#555;font-size:12px;margin-top:8px;">встроенные: crypto, sparkwtf, @sparkwtf, casino, slots, azino, азино, виннер, t.me, telegram.me</p>
+            <p style="color:#555;font-size:12px;margin-top:8px;">встроенные: crypto, casino, slots, azino, азино, виннер, t.me, telegram.me</p>
         </div>
-
         <div class="tab-content" id="tab-bans">
             <div class="ban-form">
                 <input id="ban-ip" placeholder="IP адрес">
                 <input id="ban-reason" placeholder="причина (опционально)">
-                <select id="ban-duration" style="background:#111;color:#fff;border:1px solid #333;padding:8px 12px;font-size:13px;font-family:inherit;min-width:80px;">
+                <select id="ban-duration">
                     <option value="3600000">1 час</option>
                     <option value="21600000">6 часов</option>
                     <option value="86400000" selected>24 часа</option>
@@ -148,19 +143,18 @@
                 </select>
                 <button id="ban-btn">забанить</button>
             </div>
-            <div class="ban-form" style="margin-top:8px;">
+            <div class="ban-form">
                 <input id="unban-ip" placeholder="IP для разбана">
                 <button id="unban-ip-btn" class="del-btn">разбанить</button>
-                <span id="unban-ip-status" style="color:#666;font-size:12px;margin-left:8px;"></span>
+                <span id="unban-ip-status" style="color:#666;font-size:12px;"></span>
             </div>
             <div id="bans-list"></div>
         </div>
-
         <div class="tab-content" id="tab-devices">
             <div class="ban-form">
                 <input id="ban-device-id" placeholder="Device ID">
                 <input id="ban-device-reason" placeholder="причина (опционально)">
-                <select id="ban-device-duration" style="background:#111;color:#fff;border:1px solid #333;padding:8px 12px;font-size:13px;font-family:inherit;min-width:80px;">
+                <select id="ban-device-duration">
                     <option value="3600000">1 час</option>
                     <option value="21600000">6 часов</option>
                     <option value="86400000" selected>24 часа</option>
@@ -170,18 +164,17 @@
                 </select>
                 <button id="ban-device-btn">забанить</button>
             </div>
-            <div class="ban-form" style="margin-top:8px;">
+            <div class="ban-form">
                 <input id="unban-device-id" placeholder="Device ID для разбана">
                 <button id="unban-device-btn" class="del-btn">разбанить</button>
-                <span id="unban-device-status" style="color:#666;font-size:12px;margin-left:8px;"></span>
+                <span id="unban-device-status" style="color:#666;font-size:12px;"></span>
             </div>
             <div id="devices-list"></div>
-            <p style="color:#555;font-size:12px;margin-top:12px;">узнать deviceId юзера: он возвращается в ответе при бане (403) или спроси у юзера — открой F12 → localStorage → ключ <code style="background:#111;padding:1px 4px;">_did</code><br>твой текущий deviceId: <span id="my-device-id" style="color:var(--accent);font-size:11px;"></span></p>
+            <p style="color:#555;font-size:12px;margin-top:12px;">узнать deviceId юзера: он возвращается в ответе при бане (403) или спроси у юзера — открой F12 &rarr; localStorage &rarr; ключ <code style="background:#111;padding:1px 4px;">_did</code><br>твой текущий deviceId: <span id="my-device-id" style="color:#744da9;font-size:11px;"></span></p>
         </div>
-
         <div class="tab-content" id="tab-emergency">
             <div class="emergency-box">
-                <div class="emergency-header">📢 экстренная новость</div>
+                <div class="emergency-header">экстренная новость</div>
                 <textarea id="emergency-text" placeholder="текст новости (до 2000 символов)" maxlength="2000"></textarea>
                 <div class="emergency-actions">
                     <button class="danger-btn" id="emergency-set">опубликовать</button>
@@ -190,619 +183,605 @@
                 </div>
             </div>
         </div>
-
         <div class="tab-content" id="tab-security">
-            <div class="emergency-box" style="border-color:var(--accent);">
-                <div class="emergency-header" style="color:var(--accent);">🔐 Google Authenticator</div>
+            <div class="emergency-box sec">
+                <div class="emergency-header sec">Google Authenticator</div>
                 <div id="totp-status"></div>
                 <div id="totp-setup-area" style="display:none;">
                     <p style="color:#aaa;font-size:14px;margin-bottom:12px;">Отсканируй QR-код или введи ключ вручную в Google Authenticator, затем введи код для подтверждения:</p>
                     <div id="totp-qr-area" style="text-align:center;margin-bottom:15px;"></div>
                     <div id="totp-secret-text" style="font-family:monospace;font-size:13px;color:#e3a87e;text-align:center;margin-bottom:15px;word-break:break-all;"></div>
                     <div class="ban-form">
-                        <input id="totp-setup-code" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="000000">
+                        <input id="totp-setup-code" type="text" maxlength="6" placeholder="000000">
                         <button id="totp-setup-btn">подтвердить</button>
                     </div>
                     <div id="totp-setup-error" style="color:#e51400;font-size:13px;margin-top:5px;"></div>
                 </div>
             </div>
         </div>
-
         <div class="tab-content" id="tab-danger">
             <div class="danger-zone">
-                <h4>⚠️ опасная зона</h4>
-                <div class="btn-row">
-                    <button class="danger-btn" id="btn-clear-posts">🗑 очистить все посты</button>
-                    <button class="danger-btn" id="btn-unban-all">🔓 снять все баны IP</button>
-                    <button class="danger-btn" id="btn-unban-all-devices">🔓 снять все баны device</button>
-                </div>
+                <h4>опасная зона</h4>
+                <button class="danger-btn" id="btn-clear-posts">очистить все посты</button>
+                <button class="danger-btn" id="btn-unban-all">снять все баны IP</button>
+                <button class="danger-btn" id="btn-unban-all-devices">снять все баны device</button>
             </div>
         </div>
     </div>
 
     <script>
-        let token = localStorage.getItem('adminToken');
-        let _cachedAdminDID = null;
-        function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+(function () {
+  'use strict';
 
-        function api(path, opts = {}) {
-            opts.headers = opts.headers || {};
-            opts.headers['Authorization'] = 'Bearer ' + token;
-            try {
-                opts.headers['X-Device-ID'] = getMyDeviceId();
-                opts.headers['X-Device-Signals'] = getSignalString().slice(0, 2000);
-            } catch(e) {}
-            return fetch(path, opts).then(r => { if (!r.ok) throw new Error(); return r.json(); });
+  var token = '';
+  var csrfToken = '';
+  try {
+    token = localStorage.getItem('adminToken') || '';
+    csrfToken = localStorage.getItem('adminCsrf') || '';
+  } catch (e) {}
+
+  function addClass(el, cls) { if (!hasClass(el, cls)) el.className += (el.className ? ' ' : '') + cls; }
+  function removeClass(el, cls) { el.className = el.className.replace(new RegExp('(^|\\s)' + cls + '(\\s|$)', 'g'), ' ').replace(/^\s+|\s+$/g, ''); }
+  function hasClass(el, cls) { return new RegExp('(^|\\s)' + cls + '(\\s|$)').test(el.className); }
+  function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+
+  function api(path, opts) {
+    opts = opts || {};
+    opts.headers = opts.headers || {};
+    opts.headers['Authorization'] = 'Bearer ' + token;
+    opts.headers['X-CSRF-Token'] = csrfToken;
+    try {
+      opts.headers['X-Device-ID'] = getMyDeviceId();
+      opts.headers['X-Device-Signals'] = getSignalString().slice(0, 2000);
+    } catch (e) {}
+    return fetch(path, opts).then(function (r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    });
+  }
+
+  function doLogin(cb) {
+    fetch('/api/admin/login', { method: 'POST' }).then(function (r) {
+      return r.json().then(function (data) { return { status: r.status, data: data }; });
+    }).then(function (result) {
+      if (result.status === 200) {
+        token = result.data.token;
+        csrfToken = result.data.csrfToken || '';
+        try { localStorage.setItem('adminToken', token); } catch (e) {}
+        try { localStorage.setItem('adminCsrf', csrfToken); } catch (e) {}
+        if (result.data.totpRequired) {
+          document.getElementById('login-box').style.display = 'none';
+          document.getElementById('totp-box').style.display = 'block';
+          document.getElementById('totp-code').focus();
+          return;
         }
-
-        function doLogin(cb) {
-            const ctrl = new AbortController();
-            const timer = setTimeout(() => ctrl.abort(), 8000);
-            fetch('/api/admin/login', { method: 'POST', signal: ctrl.signal })
-                .then(r => { clearTimeout(timer); return r.json().then(data => ({ status: r.status, data })); })
-                .then(({ status, data }) => {
-                    if (status === 200) {
-                        token = data.token;
-                        localStorage.setItem('adminToken', token);
-                        if (data.totpRequired) {
-                            document.getElementById('login-box').style.display = 'none';
-                            document.getElementById('totp-box').style.display = 'block';
-                            document.getElementById('totp-code').focus();
-                            return;
-                        }
-                        if (data.totpSetupRequired) {
-                            document.getElementById('login-box').style.display = 'none';
-                            document.getElementById('totp-setup-box').style.display = 'block';
-                            doTOTPSetup();
-                            return;
-                        }
-                        showDashboard(cb);
-                    } else {
-                        document.getElementById('login-error').textContent = data.error || 'Ошибка';
-                        document.getElementById('login-error').style.display = 'block';
-                    }
-                })
-                .catch(() => {
-                    clearTimeout(timer);
-                    document.getElementById('login-error').textContent = 'Нет доступа или ошибка соединения';
-                    document.getElementById('login-error').style.display = 'block';
-                });
+        if (result.data.totpSetupRequired) {
+          document.getElementById('login-box').style.display = 'none';
+          document.getElementById('totp-setup-box').style.display = 'block';
+          doTOTPSetup();
+          return;
         }
+        showDashboard(cb);
+      } else {
+        document.getElementById('login-error').innerHTML = result.data.error || 'Ошибка';
+        document.getElementById('login-error').style.display = 'block';
+      }
+    }).catch(function () {
+      document.getElementById('login-error').innerHTML = 'Нет доступа или ошибка соединения';
+      document.getElementById('login-error').style.display = 'block';
+    });
+  }
 
-        function doTOTPSetup() {
-            api('/api/admin/totp/setup', { method: 'POST' }).then(d => {
-                document.getElementById('totp-setup-qr').innerHTML = '<img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(d.uri) + '" alt="QR-код" style="border:4px solid #333;border-radius:8px;">';
-                document.getElementById('totp-setup-secret').textContent = 'Ключ: ' + d.secret;
-                document.getElementById('totp-setup-code-input').focus();
-            }).catch(() => {
-                document.getElementById('totp-setup-error').textContent = 'Ошибка соединения';
-                document.getElementById('totp-setup-error').style.display = 'block';
-            });
-        }
+  function doTOTPSetup() {
+    api('/api/admin/totp/setup', { method: 'POST' }).then(function (d) {
+      document.getElementById('totp-setup-qr').innerHTML = '<img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(d.uri) + '" alt="QR-код" style="border:4px solid #333;">';
+      document.getElementById('totp-setup-secret').innerHTML = 'Ключ: ' + d.secret;
+      document.getElementById('totp-setup-code-input').focus();
+    }).catch(function () {
+      document.getElementById('totp-setup-error').innerHTML = 'Ошибка соединения';
+      document.getElementById('totp-setup-error').style.display = 'block';
+    });
+  }
 
-        function doTOTP() {
-            const code = document.getElementById('totp-code').value.trim();
-            if (!code) return;
-            fetch('/api/admin/totp/verify', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ token, code })
-            }).then(r => r.json()).then(d => {
-                if (d.ok) {
-                    document.getElementById('totp-box').style.display = 'none';
-                    showDashboard();
-                } else {
-                    document.getElementById('totp-error').textContent = d.error || 'Неверный код';
-                    document.getElementById('totp-error').style.display = 'block';
-                }
-            }).catch(() => {
-                document.getElementById('totp-error').textContent = 'Ошибка соединения';
-                document.getElementById('totp-error').style.display = 'block';
-            });
-        }
+  function doTOTP() {
+    var code = document.getElementById('totp-code').value.replace(/^\s+|\s+$/g, '');
+    if (!code) return;
+    fetch('/api/admin/totp/verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: token, code: code })
+    }).then(function (r) { return r.json(); }).then(function (d) {
+      if (d.ok) {
+        document.getElementById('totp-box').style.display = 'none';
+        showDashboard();
+      } else {
+        document.getElementById('totp-error').innerHTML = d.error || 'Неверный код';
+        document.getElementById('totp-error').style.display = 'block';
+      }
+    }).catch(function () {
+      document.getElementById('totp-error').innerHTML = 'Ошибка соединения';
+      document.getElementById('totp-error').style.display = 'block';
+    });
+  }
 
-        function showDashboard(cb) {
-            document.getElementById('login-box').style.display = 'none';
-            document.getElementById('dashboard').style.display = 'block';
-            loadStats(); loadPosts(); loadBans(); loadDeviceBans(); loadEmergency(); loadComments(); loadBanwords();
-            loadTOTPStatus();
-            if (cb) cb();
-        }
-
-        if (token) {
-            try {
-                api('/api/admin/stats').then(() => {
-                    showDashboard();
-                }).catch(() => {
-                    localStorage.removeItem('adminToken');
-                    token = '';
-                    doLogin();
-                });
-            } catch(e) {
-                localStorage.removeItem('adminToken');
-                token = '';
-                doLogin();
-            }
+  function doTOTPSetupVerify() {
+    var code = document.getElementById('totp-setup-code-input').value.replace(/^\s+|\s+$/g, '');
+    if (!code) return;
+    document.getElementById('totp-setup-submit').disabled = true;
+    api('/api/admin/totp/verify-setup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code: code }) })
+      .then(function (d) {
+        if (d.ok) {
+          document.getElementById('totp-setup-box').style.display = 'none';
+          showDashboard();
         } else {
-            doLogin();
+          document.getElementById('totp-setup-error').innerHTML = d.error || 'Ошибка';
+          document.getElementById('totp-setup-error').style.display = 'block';
+          document.getElementById('totp-setup-submit').disabled = false;
         }
+      }).catch(function () {
+        document.getElementById('totp-setup-error').innerHTML = 'Ошибка соединения';
+        document.getElementById('totp-setup-error').style.display = 'block';
+        document.getElementById('totp-setup-submit').disabled = false;
+      });
+  }
 
-        function loadStats() {
-            api('/api/admin/stats').then(d => {
-                document.getElementById('stats').innerHTML = `
-                    <div class="stat-card"><div class="num">${d.postsCount}</div><div class="label">постов</div></div>
-                    <div class="stat-card"><div class="num">${d.totalLikes}</div><div class="label">лайков</div></div>
-                    <div class="stat-card"><div class="num">${d.totalComments}</div><div class="label">комментариев</div></div>
-                    <div class="stat-card"><div class="num">${d.bannedIPsCount}</div><div class="label">забанено IP</div></div>
-                `;
-            });
-        }
+  function showDashboard(cb) {
+    document.getElementById('login-box').style.display = 'none';
+    document.getElementById('dashboard').style.display = 'block';
+    loadStats(); loadPosts(); loadBans(); loadDeviceBans(); loadEmergency(); loadComments(); loadBanwords();
+    loadTOTPStatus();
+    if (cb) cb();
+  }
 
-        function loadPosts() {
-            const el = document.getElementById('posts-list');
-            el.innerHTML = '<div class="loader">загрузка...</div>';
-            api('/api/admin/posts').then(posts => {
-                if (!posts.length) { el.innerHTML = '<p style="color:#666;">постов нет</p>'; return; }
-                el.innerHTML = posts.map(p => `
-                    <div class="post-item">
-                        <div class="info">
-                            <div class="title">${esc(p.title || 'без заголовка')}</div>
-                            <div class="meta">${esc(p.text)}… &middot; ${new Date(p.date).toLocaleDateString('ru')} &middot; ❤ ${p.likes} &middot; 💬 ${p.commentsCount} ${p.ip ? '<span class="label-badge ip" title="IP">' + esc(p.ip) + '</span>' : ''} ${p.deviceId ? '<span class="label-badge device" title="deviceId">' + esc(p.deviceId) + '</span>' : ''}</div>
-                        </div>
-                        <div class="post-actions">
-                            ${p.ip ? '<button class="ban-btn quick-ban-btn" data-ip="' + p.ip + '" title="забанить IP">🔨 IP</button>' : ''}
-                            ${p.deviceId ? '<button class="ban-btn quick-ban-btn" data-device="' + p.deviceId + '" title="забанить device">🔨 device</button>' : ''}
-                            <button class="del-btn" data-id="${p.id}">удалить</button>
-                        </div>
-                    </div>
-                `).join('');
-                el.querySelectorAll('.del-btn').forEach(btn => {
-                    btn.addEventListener('click', () => {
-                        if (!confirm('Удалить пост?')) return;
-                        api('/api/admin/posts/' + btn.dataset.id, { method: 'DELETE' }).then(() => { loadPosts(); loadStats(); });
-                    });
-                });
-                el.querySelectorAll('.ban-btn').forEach(btn => {
-                    btn.addEventListener('click', () => {
-                        const ip = btn.dataset.ip;
-                        const device = btn.dataset.device;
-                        if (ip && !confirm('Забанить IP ' + ip + ' на 24ч?')) return;
-                        if (device && !confirm('Забанить device ' + device.substring(0, 30) + '… на 24ч?')) return;
-                        const duration = 86400000;
-                        const until = Date.now() + duration;
-                        if (ip) api('/api/admin/ban', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ip, until }) }).then(() => { loadBans(); loadStats(); });
-                        if (device) api('/api/admin/ban-device', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ deviceId: device, until }) }).then(() => { loadDeviceBans(); loadStats(); });
-                    });
-                });
-            }).catch(() => { el.innerHTML = '<p style="color:#e51400;">ошибка загрузки</p>'; });
-        }
+  if (token) {
+    api('/api/admin/stats').then(function () { showDashboard(); }).catch(function () {
+      try { localStorage.removeItem('adminToken'); } catch (e) {}
+      try { localStorage.removeItem('adminCsrf'); } catch (e) {}
+      token = ''; csrfToken = '';
+      doLogin();
+    });
+  } else {
+    doLogin();
+  }
 
-        function loadBans() {
-            const el = document.getElementById('bans-list');
-            el.innerHTML = '<div class="loader">загрузка...</div>';
-            api('/api/admin/banned').then(bans => {
-                const keys = Object.keys(bans);
-                if (!keys.length) { el.innerHTML = '<p style="color:#666;">банов нет</p>'; return; }
-                el.innerHTML = keys.map(ip => {
-                    const b = bans[ip];
-                    const untilStr = b.until && b.until !== Infinity ? 'до ' + new Date(b.until).toLocaleString('ru') : 'навсегда';
-                    return `
-                        <div class="ban-item">
-                            <div class="info">
-                                <div class="ip">${esc(ip)}</div>
-                                <div class="reason">${esc(b.reason || 'без причины')} &middot; ${untilStr}</div>
-                            </div>
-                            <button class="unban-btn" data-ip="${esc(ip)}">разбанить</button>
-                        </div>
-                    `;
-                }).join('');
-                el.querySelectorAll('.unban-btn').forEach(btn => {
-                    btn.addEventListener('click', () => {
-                        api('/api/admin/ban/' + encodeURIComponent(btn.dataset.ip), { method: 'DELETE' }).then(() => { loadBans(); loadStats(); });
-                    });
-                });
-            }).catch(() => { el.innerHTML = '<p style="color:#e51400;">ошибка загрузки</p>'; });
-        }
+  function loadStats() {
+    api('/api/admin/stats').then(function (d) {
+      document.getElementById('stats').innerHTML =
+        '<div class="stat-card"><div class="num">' + d.postsCount + '</div><div class="label">постов</div></div>' +
+        '<div class="stat-card"><div class="num">' + d.totalLikes + '</div><div class="label">лайков</div></div>' +
+        '<div class="stat-card"><div class="num">' + d.totalComments + '</div><div class="label">комментариев</div></div>' +
+        '<div class="stat-card"><div class="num">' + d.bannedIPsCount + '</div><div class="label">забанено IP</div></div>';
+    });
+  }
 
-        document.getElementById('ban-btn').addEventListener('click', () => {
-            const ip = document.getElementById('ban-ip').value.trim();
-            const reason = document.getElementById('ban-reason').value.trim();
-            const dur = parseInt(document.getElementById('ban-duration').value);
-            if (!ip) return;
-            const until = dur > 0 ? Date.now() + dur : 0;
-            api('/api/admin/ban', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ip, reason, until }) })
-                .then(() => { document.getElementById('ban-ip').value = ''; document.getElementById('ban-reason').value = ''; loadBans(); loadStats(); });
-        });
+  function loadPosts() {
+    var el = document.getElementById('posts-list');
+    el.innerHTML = '<div class="loader">загрузка...</div>';
+    api('/api/admin/posts').then(function (posts) {
+      if (!posts.length) { el.innerHTML = '<p style="color:#666;">постов нет</p>'; return; }
+      var html = '';
+      for (var i = 0; i < posts.length; i++) {
+        var p = posts[i];
+        var ipHtml = p.ip ? '<span class="label-badge ip" title="IP">' + esc(p.ip) + '</span>' : '';
+        var devHtml = p.deviceId ? '<span class="label-badge device" title="deviceId">' + esc(p.deviceId) + '</span>' : '';
+        html += '<div class="post-item">';
+        html += '<div class="info"><div class="title">' + esc(p.title || 'без заголовка') + '</div>';
+        html += '<div class="meta">' + esc(p.text) + '… · ' + new Date(p.date).toLocaleDateString('ru') + ' · ❤ ' + p.likes + ' · 💬 ' + p.commentsCount + ' ' + ipHtml + ' ' + devHtml + '</div></div>';
+        html += '<div class="post-actions">';
+        if (p.ip) html += '<button class="ban-btn qban-btn" data-ip="' + p.ip + '" title="забанить IP">IP</button>';
+        if (p.deviceId) html += '<button class="ban-btn qban-btn" data-device="' + p.deviceId + '" title="забанить device">device</button>';
+        html += '<button class="del-btn" data-id="' + p.id + '">удалить</button></div></div>';
+      }
+      el.innerHTML = html;
+      var delBtns = el.querySelectorAll('.del-btn');
+      for (var di = 0; di < delBtns.length; di++) {
+        delBtns[di].onclick = function () {
+          if (!confirm('Удалить пост?')) return;
+          api('/api/admin/posts/' + this.getAttribute('data-id'), { method: 'DELETE' }).then(function () { loadPosts(); loadStats(); });
+        };
+      }
+      var qbans = el.querySelectorAll('.qban-btn');
+      for (var bi = 0; bi < qbans.length; bi++) {
+        qbans[bi].onclick = function () {
+          var ip = this.getAttribute('data-ip');
+          var device = this.getAttribute('data-device');
+          var until = Date.now() + 86400000;
+          if (ip) api('/api/admin/ban', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ip: ip, until: until }) }).then(function () { loadBans(); loadStats(); });
+          if (device) api('/api/admin/ban-device', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ deviceId: device, until: until }) }).then(function () { loadDeviceBans(); loadStats(); });
+        };
+      }
+    }).catch(function () { el.innerHTML = '<p style="color:#e51400;">ошибка загрузки</p>'; });
+  }
 
-        function loadDeviceBans() {
-            const el = document.getElementById('devices-list');
-            el.innerHTML = '<div class="loader">загрузка...</div>';
-            api('/api/admin/banned-devices').then(devices => {
-                const keys = Object.keys(devices);
-                if (!keys.length) { el.innerHTML = '<p style="color:#666;">банов device нет</p>'; return; }
-                el.innerHTML = keys.map(id => {
-                    const b = devices[id];
-                    const untilStr = b.until && b.until !== Infinity ? 'до ' + new Date(b.until).toLocaleString('ru') : 'навсегда';
-                    return `
-                        <div class="ban-item">
-                            <div class="info">
-                                <div class="ip" style="font-size:11px;word-break:break-all;">${esc(id)}</div>
-                                <div class="reason">${esc(b.reason || 'без причины')} &middot; ${untilStr}</div>
-                            </div>
-                            <button class="unban-btn" data-device="${esc(id)}">разбанить</button>
-                        </div>
-                    `;
-                }).join('');
-                el.querySelectorAll('.unban-btn').forEach(btn => {
-                    btn.addEventListener('click', () => {
-                        api('/api/admin/ban-device/' + encodeURIComponent(btn.dataset.device), { method: 'DELETE' }).then(() => { loadDeviceBans(); loadStats(); });
-                    });
-                });
-            }).catch(() => { el.innerHTML = '<p style="color:#e51400;">ошибка загрузки</p>'; });
-        }
+  function loadBans() {
+    var el = document.getElementById('bans-list');
+    el.innerHTML = '<div class="loader">загрузка...</div>';
+    api('/api/admin/banned').then(function (bans) {
+      var keys = [];
+      for (var k in bans) { if (Object.prototype.hasOwnProperty.call(bans, k)) keys.push(k); }
+      if (!keys.length) { el.innerHTML = '<p style="color:#666;">банов нет</p>'; return; }
+      var html = '';
+      for (var i = 0; i < keys.length; i++) {
+        var ip = keys[i];
+        var b = bans[ip];
+        var untilStr = b.until && b.until !== Infinity ? 'до ' + new Date(b.until).toLocaleString('ru') : 'навсегда';
+        html += '<div class="ban-item"><div class="info"><div class="ip">' + esc(ip) + '</div>';
+        html += '<div class="reason">' + esc(b.reason || 'без причины') + ' · ' + untilStr + '</div></div>';
+        html += '<button class="unban-btn" data-ip="' + esc(ip) + '">разбанить</button></div>';
+      }
+      el.innerHTML = html;
+      var ubans = el.querySelectorAll('.unban-btn');
+      for (var ui = 0; ui < ubans.length; ui++) {
+        ubans[ui].onclick = function () {
+          api('/api/admin/ban/' + encodeURIComponent(this.getAttribute('data-ip')), { method: 'DELETE' }).then(function () { loadBans(); loadStats(); });
+        };
+      }
+    }).catch(function () { el.innerHTML = '<p style="color:#e51400;">ошибка загрузки</p>'; });
+  }
 
-        function hashStr(s) {
-            let h = 0;
-            for (let i = 0; i < s.length; i++) { h = ((h << 5) - h) + s.charCodeAt(i); h |= 0; }
-            return Math.abs(h).toString(36);
-        }
-        async function sha256(s) {
-            try {
-                const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s));
-                return Array.from(new Uint8Array(buf)).map(b => b.toString(36).padStart(2, '0')).join('').slice(0, 60);
-            } catch(e) { return null; }
-        }
-        function getCanvasFP() {
-            try {
-                const c = document.createElement('canvas');
-                c.width = 256; c.height = 128;
-                const ctx = c.getContext('2d');
-                ctx.textBaseline = 'alphabetic';
-                ctx.font = '14px Arial';
-                ctx.fillStyle = '#f60';
-                ctx.fillRect(10, 10, 60, 60);
-                ctx.fillStyle = '#069';
-                ctx.fillText('C=π·d', 5, 40);
-                ctx.fillStyle = '#444';
-                ctx.font = '12px monospace';
-                ctx.fillText(navigator.userAgent.slice(-8), 5, 70);
-                ctx.font = 'bold 20px Georgia';
-                ctx.fillStyle = '#2a9';
-                ctx.fillText('g@', 120, 50);
-                ctx.strokeStyle = '#e3a87e';
-                ctx.lineWidth = 2.5;
-                ctx.beginPath();
-                ctx.arc(200, 60, 28, 0, Math.PI * 2);
-                ctx.stroke();
-                ctx.fillStyle = 'rgba(200,40,80,0.25)';
-                ctx.beginPath();
-                ctx.ellipse(35, 100, 42, 18, 0.3, 0, Math.PI * 2);
-                ctx.fill();
-                const grad = ctx.createLinearGradient(120, 0, 220, 0);
-                grad.addColorStop(0, '#a0f');
-                grad.addColorStop(1, '#0af');
-                ctx.fillStyle = grad;
-                ctx.fillRect(140, 90, 60, 25);
-                return hashStr(c.toDataURL());
-            } catch(e) { return ''; }
-        }
-        function getSignalString() {
-            const parts = [
-                navigator.userAgent,
-                screen.width + 'x' + screen.height + 'x' + screen.colorDepth,
-                navigator.language,
-                Intl.DateTimeFormat().resolvedOptions().timeZone,
-                navigator.platform,
-                navigator.hardwareConcurrency || '',
-                navigator.deviceMemory || '',
-                navigator.maxTouchPoints,
-                getCanvasFP(),
-                navigator.webdriver || '',
-                navigator.vendor || '',
-                window.devicePixelRatio || '',
-                screen.availWidth + 'x' + screen.availHeight,
-                screen.pixelDepth || '',
-                (screen.orientation ? screen.orientation.type : '') || '',
-                (navigator.plugins ? navigator.plugins.length : '') || '',
-                navigator.productSub || '',
-                (navigator.userAgent.match(/Android\s[\d.]+/)?.[0]) || '',
-                navigator.userAgentData?.platform || ''
-            ];
-            return parts.join('|');
-        }
-        function getCookie(n) {
-            const m = document.cookie.match('(^|;)\\s*' + n + '\\s*=\\s*([^;]+)');
-            return m ? m.pop() : '';
-        }
-        function setCookie(n, v, days) {
-            const d = new Date(); d.setTime(d.getTime() + days * 864e5);
-            document.cookie = n + '=' + v + '; expires=' + d.toUTCString() + '; path=/; SameSite=Lax; Secure';
-        }
-        async function generateAdminDeviceID() {
-            const signals = getSignalString();
-            let h = await sha256(signals);
-            if (!h || h.length < 16) h = hashStr(signals);
-            const id = 'd3_' + h;
-            saveDeviceID(id);
-            _cachedAdminDID = id;
-            return id;
-        }
-        function saveDeviceID(id) {
-            try { localStorage.setItem('_did', id); } catch(e) {}
-            try { sessionStorage.setItem('_did', id); } catch(e) {}
-            try { setCookie('_did', id, 365); } catch(e) {}
-            try {
-                const req = indexedDB.open('_did_db', 1);
-                req.onupgradeneeded = () => req.result.createObjectStore('d', { keyPath: 'k' });
-                req.onsuccess = () => {
-                    const tx = req.result.transaction('d', 'readwrite');
-                    const store = tx.objectStore('d');
-                    store.get('id').onsuccess = (e) => {
-                        if (!e.target.result) store.put({ k: 'id', v: id });
-                    };
-                };
-            } catch(e) {}
-        }
-        function getMyDeviceId() {
-            if (_cachedAdminDID) return _cachedAdminDID;
-            try {
-                let id = localStorage.getItem('_did') || sessionStorage.getItem('_did') || getCookie('_did');
-                if (!id) {
-                    const signals = getSignalString();
-                    const h = hashStr(signals);
-                    id = 'd2_' + h;
-                    saveDeviceID(id);
-                }
-                _cachedAdminDID = id;
-                generateAdminDeviceID().catch(() => {});
-                return id;
-            } catch(e) { return 'ошибка'; }
-        }
-        document.getElementById('my-device-id').textContent = getMyDeviceId();
+  document.getElementById('ban-btn').onclick = function () {
+    var ip = document.getElementById('ban-ip').value.replace(/^\s+|\s+$/g, '');
+    var reason = document.getElementById('ban-reason').value.replace(/^\s+|\s+$/g, '');
+    var dur = parseInt(document.getElementById('ban-duration').value, 10);
+    if (!ip) return;
+    var until = dur > 0 ? Date.now() + dur : 0;
+    api('/api/admin/ban', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ip: ip, reason: reason, until: until }) })
+      .then(function () { document.getElementById('ban-ip').value = ''; document.getElementById('ban-reason').value = ''; loadBans(); loadStats(); });
+  };
 
-        document.getElementById('ban-device-btn').addEventListener('click', () => {
-            const deviceId = document.getElementById('ban-device-id').value.trim();
-            const reason = document.getElementById('ban-device-reason').value.trim();
-            const dur = parseInt(document.getElementById('ban-device-duration').value);
-            if (!deviceId) return;
-            const until = dur > 0 ? Date.now() + dur : 0;
-            api('/api/admin/ban-device', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ deviceId, reason, until }) })
-                .then(() => { document.getElementById('ban-device-id').value = ''; document.getElementById('ban-device-reason').value = ''; loadDeviceBans(); loadStats(); });
-        });
+  function loadDeviceBans() {
+    var el = document.getElementById('devices-list');
+    el.innerHTML = '<div class="loader">загрузка...</div>';
+    api('/api/admin/banned-devices').then(function (devices) {
+      var keys = [];
+      for (var k in devices) { if (Object.prototype.hasOwnProperty.call(devices, k)) keys.push(k); }
+      if (!keys.length) { el.innerHTML = '<p style="color:#666;">банов device нет</p>'; return; }
+      var html = '';
+      for (var i = 0; i < keys.length; i++) {
+        var id = keys[i];
+        var b = devices[id];
+        var untilStr = b.until && b.until !== Infinity ? 'до ' + new Date(b.until).toLocaleString('ru') : 'навсегда';
+        html += '<div class="ban-item"><div class="info"><div class="ip" style="font-size:11px;word-break:break-all;">' + esc(id) + '</div>';
+        html += '<div class="reason">' + esc(b.reason || 'без причины') + ' · ' + untilStr + '</div></div>';
+        html += '<button class="unban-btn" data-device="' + esc(id) + '">разбанить</button></div>';
+      }
+      el.innerHTML = html;
+      var ubans = el.querySelectorAll('.unban-btn');
+      for (var ui = 0; ui < ubans.length; ui++) {
+        ubans[ui].onclick = function () {
+          api('/api/admin/ban-device/' + encodeURIComponent(this.getAttribute('data-device')), { method: 'DELETE' }).then(function () { loadDeviceBans(); loadStats(); });
+        };
+      }
+    }).catch(function () { el.innerHTML = '<p style="color:#e51400;">ошибка загрузки</p>'; });
+  }
 
-        document.getElementById('unban-ip-btn').addEventListener('click', () => {
-            const ip = document.getElementById('unban-ip').value.trim();
-            if (!ip) return;
-            api('/api/admin/ban/' + encodeURIComponent(ip), { method: 'DELETE' })
-                .then(() => { document.getElementById('unban-ip').value = ''; document.getElementById('unban-ip-status').textContent = '✅ разбанен'; loadBans(); loadStats(); })
-                .catch(() => { document.getElementById('unban-ip-status').textContent = '❌ ошибка'; });
-        });
+  // Simple device ID functions (no crypto.subtle dependency for admin)
+  function hashStr(s) {
+    var h = 0, i;
+    for (i = 0; i < s.length; i++) { h = ((h << 5) - h) + s.charCodeAt(i); h |= 0; }
+    return Math.abs(h).toString(36);
+  }
 
-        document.getElementById('unban-device-btn').addEventListener('click', () => {
-            const deviceId = document.getElementById('unban-device-id').value.trim();
-            if (!deviceId) return;
-            api('/api/admin/ban-device/' + encodeURIComponent(deviceId), { method: 'DELETE' })
-                .then(() => { document.getElementById('unban-device-id').value = ''; document.getElementById('unban-device-status').textContent = '✅ разбанен'; loadDeviceBans(); loadStats(); })
-                .catch(() => { document.getElementById('unban-device-status').textContent = '❌ ошибка'; });
-        });
+  function getCanvasFP() {
+    try {
+      var c = document.createElement('canvas');
+      if (!c.getContext) return '';
+      c.width = 256; c.height = 128;
+      var ctx = c.getContext('2d');
+      ctx.textBaseline = 'alphabetic';
+      ctx.font = '14px Arial';
+      ctx.fillStyle = '#f60';
+      ctx.fillRect(10, 10, 60, 60);
+      ctx.fillStyle = '#069';
+      ctx.fillText('C=π·d', 5, 40);
+      ctx.fillStyle = '#444';
+      ctx.font = '12px monospace';
+      ctx.fillText(navigator.userAgent.slice(-8), 5, 70);
+      ctx.font = 'bold 20px Georgia';
+      ctx.fillStyle = '#2a9';
+      ctx.fillText('g@', 120, 50);
+      ctx.strokeStyle = '#e3a87e';
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.arc(200, 60, 28, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.fillStyle = 'rgba(200,40,80,0.25)';
+      ctx.beginPath();
+      if (ctx.ellipse) { ctx.ellipse(35, 100, 42, 18, 0.3, 0, Math.PI * 2); ctx.fill(); }
+      var grad = ctx.createLinearGradient(120, 0, 220, 0);
+      grad.addColorStop(0, '#a0f');
+      grad.addColorStop(1, '#0af');
+      ctx.fillStyle = grad;
+      ctx.fillRect(140, 90, 60, 25);
+      return hashStr(c.toDataURL());
+    } catch (e) { return ''; }
+  }
 
-        document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-                document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-                btn.classList.add('active');
-                document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
-            });
-        });
+  function getSignalString() {
+    var parts = [
+      navigator.userAgent,
+      screen.width + 'x' + screen.height + 'x' + (screen.colorDepth || ''),
+      navigator.language || navigator.userLanguage || '',
+      (typeof Intl !== 'undefined' && Intl.DateTimeFormat ? Intl.DateTimeFormat().resolvedOptions().timeZone : ''),
+      navigator.platform || '',
+      navigator.hardwareConcurrency || '',
+      navigator.deviceMemory || '',
+      navigator.maxTouchPoints || 0,
+      getCanvasFP(),
+      navigator.webdriver || '',
+      navigator.vendor || '',
+      window.devicePixelRatio || '',
+      (screen.availWidth || screen.width) + 'x' + (screen.availHeight || screen.height),
+      screen.pixelDepth || '',
+      (screen.orientation && screen.orientation.type ? screen.orientation.type : ''),
+      (navigator.plugins ? navigator.plugins.length : ''),
+      navigator.productSub || '',
+      (navigator.userAgent.match(/Android\s[\d.]+/) ? navigator.userAgent.match(/Android\s[\d.]+/)[0] : ''),
+      (navigator.userAgentData && navigator.userAgentData.platform ? navigator.userAgentData.platform : '')
+    ];
+    return parts.join('|');
+  }
 
-        document.getElementById('btn-clear-posts').addEventListener('click', () => {
-            if (!confirm('Точно удалить ВСЕ посты? Это необратимо.')) return;
-            if (!confirm('Ещё раз: все посты будут безвозвратно удалены. Продолжить?')) return;
-            const btn = document.getElementById('btn-clear-posts');
-            btn.disabled = true; btn.textContent = 'удаляю...';
-            api('/api/admin/posts', { method: 'DELETE' })
-                .then(() => { loadPosts(); loadStats(); btn.disabled = false; btn.textContent = '🗑 очистить все посты'; });
-        });
+  function getCookie(n) {
+    var m = document.cookie.match('(^|;)\\s*' + n + '\\s*=\\s*([^;]+)');
+    return m ? m.pop() : '';
+  }
 
-        document.getElementById('btn-unban-all').addEventListener('click', () => {
-            if (!confirm('Снять все IP-баны?')) return;
-            const btn = document.getElementById('btn-unban-all');
-            btn.disabled = true; btn.textContent = 'снимаю...';
-            api('/api/admin/bans', { method: 'DELETE' })
-                .then(() => { loadBans(); loadStats(); btn.disabled = false; btn.textContent = '🔓 снять все баны IP'; });
-        });
+  function setCookie(n, v, days) {
+    var d = new Date(); d.setTime(d.getTime() + days * 864e5);
+    document.cookie = n + '=' + v + '; expires=' + d.toUTCString() + '; path=/; SameSite=Lax; Secure';
+  }
 
-        document.getElementById('btn-unban-all-devices').addEventListener('click', () => {
-            if (!confirm('Снять все баны device?')) return;
-            const btn = document.getElementById('btn-unban-all-devices');
-            btn.disabled = true; btn.textContent = 'снимаю...';
-            api('/api/admin/banned-devices', { method: 'DELETE' })
-                .then(() => { loadDeviceBans(); loadStats(); btn.disabled = false; btn.textContent = '🔓 снять все баны device'; });
-        });
+  var _cachedAdminDID = null;
 
-        function loadEmergency() {
-            api('/api/admin/emergency').then(msg => {
-                if (msg.active && msg.text) {
-                    document.getElementById('emergency-text').value = msg.text;
-                    document.getElementById('emergency-clear').style.display = 'inline-block';
-                    document.getElementById('emergency-status').textContent = '✅ опубликовано';
-                } else {
-                    document.getElementById('emergency-text').value = '';
-                    document.getElementById('emergency-clear').style.display = 'none';
-                    document.getElementById('emergency-status').textContent = '';
-                }
-            }).catch(() => {});
-        }
+  function saveDeviceID(id) {
+    try { localStorage.setItem('_did', id); } catch (e) {}
+    try { sessionStorage.setItem('_did', id); } catch (e) {}
+    try { setCookie('_did', id, 365); } catch (e) {}
+    try {
+      if (window.indexedDB) {
+        var req = indexedDB.open('_did_db', 1);
+        req.onupgradeneeded = function () { req.result.createObjectStore('d', { keyPath: 'k' }); };
+        req.onsuccess = function () {
+          var tx = req.result.transaction('d', 'readwrite');
+          var store = tx.objectStore('d');
+          store.get('id').onsuccess = function (e) {
+            if (!e.target.result) store.put({ k: 'id', v: id });
+          };
+        };
+      }
+    } catch (e) {}
+  }
 
-        document.getElementById('emergency-set').addEventListener('click', () => {
-            const text = document.getElementById('emergency-text').value.trim();
-            if (!text) return;
-            const btn = document.getElementById('emergency-set');
-            btn.disabled = true; btn.textContent = 'публикую...';
-            api('/api/admin/emergency', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text }) })
-                .then(() => { btn.disabled = false; btn.textContent = 'опубликовать'; loadEmergency(); });
-        });
+  function getMyDeviceId() {
+    if (_cachedAdminDID) return _cachedAdminDID;
+    try {
+      var id = localStorage.getItem('_did') || sessionStorage.getItem('_did') || getCookie('_did');
+      if (!id) {
+        var signals = getSignalString();
+        var h = hashStr(signals);
+        id = 'd2_' + h;
+        saveDeviceID(id);
+      }
+      _cachedAdminDID = id;
+      return id;
+    } catch (e) { return 'ошибка'; }
+  }
 
-        document.getElementById('emergency-clear').addEventListener('click', () => {
-            if (!confirm('Снять экстренную новость?')) return;
-            api('/api/admin/emergency', { method: 'DELETE' })
-                .then(() => { loadEmergency(); });
-        });
+  try { document.getElementById('my-device-id').innerHTML = getMyDeviceId(); } catch (e) {}
 
-        // --- COMMENTS ---
-        function loadComments() {
-            const el = document.getElementById('comments-list');
-            el.innerHTML = '<div class="loader">загрузка...</div>';
-            api('/api/admin/comments').then(comments => {
-                if (!comments.length) { el.innerHTML = '<p style="color:#666;">комментариев нет</p>'; return; }
-                el.innerHTML = comments.map(c => `
-                    <div class="post-item">
-                        <div class="info">
-                            <div class="title" style="font-size:12px;color:var(--accent);">${esc(c.postTitle)}</div>
-                            <div class="meta">${esc(c.text)} &middot; ${new Date(c.date).toLocaleDateString('ru')}</div>
-                        </div>
-                        <button class="del-btn" data-postid="${c.postId}" data-ci="${c.ci}">удалить</button>
-                    </div>
-                `).join('');
-                el.querySelectorAll('.del-btn').forEach(btn => {
-                    btn.addEventListener('click', () => {
-                        if (!confirm('Удалить комментарий?')) return;
-                        api('/api/admin/comments/' + btn.dataset.postid + '/' + btn.dataset.ci, { method: 'DELETE' })
-                            .then(() => { loadComments(); loadStats(); });
-                    });
-                });
-            }).catch(() => { el.innerHTML = '<p style="color:#e51400;">ошибка загрузки</p>'; });
-        }
+  document.getElementById('ban-device-btn').onclick = function () {
+    var deviceId = document.getElementById('ban-device-id').value.replace(/^\s+|\s+$/g, '');
+    var reason = document.getElementById('ban-device-reason').value.replace(/^\s+|\s+$/g, '');
+    var dur = parseInt(document.getElementById('ban-device-duration').value, 10);
+    if (!deviceId) return;
+    var until = dur > 0 ? Date.now() + dur : 0;
+    api('/api/admin/ban-device', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ deviceId: deviceId, reason: reason, until: until }) })
+      .then(function () { document.getElementById('ban-device-id').value = ''; document.getElementById('ban-device-reason').value = ''; loadDeviceBans(); loadStats(); });
+  };
 
-        // --- BANWORDS ---
-        function loadBanwords() {
-            api('/api/admin/banwords').then(words => {
-                document.getElementById('banwords-text').value = words.join(', ');
-                document.getElementById('banwords-status').textContent = '';
-            }).catch(() => {});
-        }
+  document.getElementById('unban-ip-btn').onclick = function () {
+    var ip = document.getElementById('unban-ip').value.replace(/^\s+|\s+$/g, '');
+    if (!ip) return;
+    api('/api/admin/ban/' + encodeURIComponent(ip), { method: 'DELETE' })
+      .then(function () { document.getElementById('unban-ip').value = ''; document.getElementById('unban-ip-status').innerHTML = '✅ разбанен'; loadBans(); loadStats(); })
+      .catch(function () { document.getElementById('unban-ip-status').innerHTML = '❌ ошибка'; });
+  };
 
-        document.getElementById('banwords-save').addEventListener('click', () => {
-            const raw = document.getElementById('banwords-text').value;
-            const words = raw.split(',').map(w => w.trim()).filter(Boolean);
-            const btn = document.getElementById('banwords-save');
-            btn.disabled = true; btn.textContent = 'сохраняю...';
-            api('/api/admin/banwords', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ words }) })
-                .then(() => { btn.disabled = false; btn.textContent = 'сохранить'; document.getElementById('banwords-status').textContent = '✅ сохранено'; });
-        });
+  document.getElementById('unban-device-btn').onclick = function () {
+    var deviceId = document.getElementById('unban-device-id').value.replace(/^\s+|\s+$/g, '');
+    if (!deviceId) return;
+    api('/api/admin/ban-device/' + encodeURIComponent(deviceId), { method: 'DELETE' })
+      .then(function () { document.getElementById('unban-device-id').value = ''; document.getElementById('unban-device-status').innerHTML = '✅ разбанен'; loadDeviceBans(); loadStats(); })
+      .catch(function () { document.getElementById('unban-device-status').innerHTML = '❌ ошибка'; });
+  };
 
-        // --- SEARCH ---
-        document.getElementById('post-search-btn').addEventListener('click', () => {
-            const q = document.getElementById('post-search').value.trim();
-            const el = document.getElementById('posts-list');
-            if (!q) { loadPosts(); return; }
-            el.innerHTML = '<div class="loader">поиск...</div>';
-            api('/api/admin/search?q=' + encodeURIComponent(q)).then(posts => {
-                if (!posts.length) { el.innerHTML = '<p style="color:#666;">ничего не найдено</p>'; return; }
-                el.innerHTML = posts.map(p => `
-                    <div class="post-item">
-                        <div class="info">
-                            <div class="title">${esc(p.title || 'без заголовка')}</div>
-                            <div class="meta">${esc(p.text)}… &middot; ${new Date(p.date).toLocaleDateString('ru')} &middot; ❤ ${p.likes} &middot; 💬 ${(p.comments||[]).length} ${p.ip ? '<span class="label-badge ip">' + esc(p.ip) + '</span>' : ''} ${p.deviceId ? '<span class="label-badge device">' + esc(p.deviceId.substring(0,20)) + '…</span>' : ''}</div>
-                        </div>
-                        <div class="post-actions">
-                            ${p.ip ? '<button class="ban-btn" data-ip="' + p.ip + '">🔨 IP</button>' : ''}
-                            ${p.deviceId ? '<button class="ban-btn" data-device="' + p.deviceId + '">🔨 device</button>' : ''}
-                            <button class="del-btn" data-id="${p.id}">удалить</button>
-                        </div>
-                    </div>
-                `).join('');
-                el.querySelectorAll('.del-btn').forEach(btn => {
-                    btn.addEventListener('click', () => {
-                        if (!confirm('Удалить пост?')) return;
-                        api('/api/admin/posts/' + btn.dataset.id, { method: 'DELETE' }).then(() => { document.getElementById('post-search').value = ''; loadPosts(); loadStats(); });
-                    });
-                });
-                el.querySelectorAll('.ban-btn').forEach(btn => {
-                    btn.addEventListener('click', () => {
-                        const ip = btn.dataset.ip; const device = btn.dataset.device;
-                        if (ip && !confirm('Забанить IP ' + ip + ' на 24ч?')) return;
-                        if (device && !confirm('Забанить device ' + device.substring(0,30) + '… на 24ч?')) return;
-                        const until = Date.now() + 86400000;
-                        if (ip) api('/api/admin/ban', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ip, until }) }).then(() => { loadBans(); loadStats(); });
-                        if (device) api('/api/admin/ban-device', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ deviceId: device, until }) }).then(() => { loadDeviceBans(); loadStats(); });
-                    });
-                });
-            }).catch(() => { el.innerHTML = '<p style="color:#e51400;">ошибка поиска</p>'; });
-        });
+  var tabBtns = document.querySelectorAll('.tab-btn');
+  for (var tbi = 0; tbi < tabBtns.length; tbi++) {
+    tabBtns[tbi].onclick = function () {
+      var tabs = document.querySelectorAll('.tab-btn');
+      for (var i = 0; i < tabs.length; i++) removeClass(tabs[i], 'active');
+      addClass(this, 'active');
+      var contents = document.querySelectorAll('.tab-content');
+      for (var j = 0; j < contents.length; j++) removeClass(contents[j], 'active');
+      var target = document.getElementById('tab-' + this.getAttribute('data-tab'));
+      if (target) addClass(target, 'active');
+    };
+  }
 
-        // --- TOTP ---
-        function loadTOTPStatus() {
-            api('/api/admin/totp/status').then(d => {
-                const el = document.getElementById('totp-status');
-                if (d.enabled) {
-                    el.innerHTML = '<p style="color:#6a6;">✅ TOTP включён</p><button class="danger-btn" id="btn-totp-disable" style="margin-top:8px;">🗑 отключить TOTP</button>';
-                    document.getElementById('totp-setup-area').style.display = 'none';
-                    document.getElementById('btn-totp-disable').addEventListener('click', () => {
-                        if (!confirm('Отключить TOTP?')) return;
-                        api('/api/admin/totp/disable', { method: 'POST' }).then(() => loadTOTPStatus());
-                    });
-                } else {
-                    el.innerHTML = '<p style="color:#c44;">❌ TOTP выключен</p><button class="login-btn" id="btn-totp-setup" style="margin-top:8px;">🔐 настроить TOTP</button>';
-                    document.getElementById('btn-totp-setup').addEventListener('click', () => {
-                        api('/api/admin/totp/setup', { method: 'POST' }).then(d => {
-                            document.getElementById('totp-setup-area').style.display = 'block';
-                            document.getElementById('totp-qr-area').innerHTML = '<img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(d.uri) + '" alt="QR-код" style="border:4px solid #333;border-radius:8px;">';
-                            document.getElementById('totp-secret-text').textContent = 'Ключ: ' + d.secret;
-                            document.getElementById('totp-setup-btn').disabled = false;
-                            document.getElementById('totp-setup-code').focus();
-                        });
-                    });
-                }
-            });
-        }
+  document.getElementById('btn-clear-posts').onclick = function () {
+    if (!confirm('Точно удалить ВСЕ посты? Это необратимо.')) return;
+    if (!confirm('Ещё раз: все посты будут безвозвратно удалены. Продолжить?')) return;
+    var btn = document.getElementById('btn-clear-posts');
+    btn.disabled = true; btn.innerHTML = 'удаляю...';
+    api('/api/admin/posts', { method: 'DELETE' })
+      .then(function () { loadPosts(); loadStats(); btn.disabled = false; btn.innerHTML = 'очистить все посты'; });
+  };
 
-        document.getElementById('totp-btn').addEventListener('click', doTOTP);
-        document.getElementById('totp-code').addEventListener('keydown', e => { if (e.key === 'Enter') doTOTP(); });
-        document.getElementById('totp-setup-submit').addEventListener('click', () => { doTOTPSetupVerify(); });
-        document.getElementById('totp-setup-code-input').addEventListener('keydown', e => { if (e.key === 'Enter') doTOTPSetupVerify(); });
-        function doTOTPSetupVerify() {
-            const code = document.getElementById('totp-setup-code-input').value.trim();
-            if (!code) return;
-            document.getElementById('totp-setup-submit').disabled = true;
-            api('/api/admin/totp/verify-setup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code }) })
-                .then(d => {
-                    if (d.ok) {
-                        document.getElementById('totp-setup-box').style.display = 'none';
-                        showDashboard();
-                    } else {
-                        document.getElementById('totp-setup-error').textContent = d.error || 'Ошибка';
-                        document.getElementById('totp-setup-error').style.display = 'block';
-                        document.getElementById('totp-setup-submit').disabled = false;
-                    }
-                }).catch(() => {
-                    document.getElementById('totp-setup-error').textContent = 'Ошибка соединения';
-                    document.getElementById('totp-setup-error').style.display = 'block';
-                    document.getElementById('totp-setup-submit').disabled = false;
-                });
-        }
-        document.getElementById('totp-setup-btn').addEventListener('click', () => {
-            const code = document.getElementById('totp-setup-code').value.trim();
-            if (!code) return;
-            document.getElementById('totp-setup-btn').disabled = true;
-            api('/api/admin/totp/verify-setup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code }) })
-                .then(d => {
-                    if (d.ok) {
-                        document.getElementById('totp-setup-area').style.display = 'none';
-                        document.getElementById('totp-setup-code').value = '';
-                        loadTOTPStatus();
-                    } else {
-                        document.getElementById('totp-setup-error').textContent = d.error || 'Ошибка';
-                        document.getElementById('totp-setup-btn').disabled = false;
-                    }
-                }).catch(() => {
-                    document.getElementById('totp-setup-error').textContent = 'Ошибка соединения';
-                    document.getElementById('totp-setup-btn').disabled = false;
-                });
-        });
-        document.getElementById('totp-setup-code').addEventListener('keydown', e => {
-            if (e.key === 'Enter') document.getElementById('totp-setup-btn').click();
-        });
-    </script>
+  document.getElementById('btn-unban-all').onclick = function () {
+    if (!confirm('Снять все IP-баны?')) return;
+    var btn = document.getElementById('btn-unban-all');
+    btn.disabled = true; btn.innerHTML = 'снимаю...';
+    api('/api/admin/bans', { method: 'DELETE' })
+      .then(function () { loadBans(); loadStats(); btn.disabled = false; btn.innerHTML = 'снять все баны IP'; });
+  };
+
+  document.getElementById('btn-unban-all-devices').onclick = function () {
+    if (!confirm('Снять все баны device?')) return;
+    var btn = document.getElementById('btn-unban-all-devices');
+    btn.disabled = true; btn.innerHTML = 'снимаю...';
+    api('/api/admin/banned-devices', { method: 'DELETE' })
+      .then(function () { loadDeviceBans(); loadStats(); btn.disabled = false; btn.innerHTML = 'снять все баны device'; });
+  };
+
+  function loadEmergency() {
+    api('/api/admin/emergency').then(function (msg) {
+      if (msg.active && msg.text) {
+        document.getElementById('emergency-text').value = msg.text;
+        document.getElementById('emergency-clear').style.display = 'inline-block';
+        document.getElementById('emergency-status').innerHTML = '✅ опубликовано';
+      } else {
+        document.getElementById('emergency-text').value = '';
+        document.getElementById('emergency-clear').style.display = 'none';
+        document.getElementById('emergency-status').innerHTML = '';
+      }
+    }).catch(function () {});
+  }
+
+  document.getElementById('emergency-set').onclick = function () {
+    var text = document.getElementById('emergency-text').value.replace(/^\s+|\s+$/g, '');
+    if (!text) return;
+    var btn = document.getElementById('emergency-set');
+    btn.disabled = true; btn.innerHTML = 'публикую...';
+    api('/api/admin/emergency', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: text }) })
+      .then(function () { btn.disabled = false; btn.innerHTML = 'опубликовать'; loadEmergency(); });
+  };
+
+  document.getElementById('emergency-clear').onclick = function () {
+    if (!confirm('Снять экстренную новость?')) return;
+    api('/api/admin/emergency', { method: 'DELETE' }).then(function () { loadEmergency(); });
+  };
+
+  function loadComments() {
+    var el = document.getElementById('comments-list');
+    el.innerHTML = '<div class="loader">загрузка...</div>';
+    api('/api/admin/comments').then(function (comments) {
+      if (!comments.length) { el.innerHTML = '<p style="color:#666;">комментариев нет</p>'; return; }
+      var html = '';
+      for (var i = 0; i < comments.length; i++) {
+        var c = comments[i];
+        html += '<div class="post-item"><div class="info"><div class="title" style="font-size:12px;color:#744da9;">' + esc(c.postTitle) + '</div>';
+        html += '<div class="meta">' + esc(c.text) + ' · ' + new Date(c.date).toLocaleDateString('ru') + '</div></div>';
+        html += '<button class="del-btn" data-postid="' + c.postId + '" data-ci="' + c.ci + '">удалить</button></div>';
+      }
+      el.innerHTML = html;
+      var dbtns = el.querySelectorAll('.del-btn');
+      for (var di = 0; di < dbtns.length; di++) {
+        dbtns[di].onclick = function () {
+          if (!confirm('Удалить комментарий?')) return;
+          api('/api/admin/comments/' + this.getAttribute('data-postid') + '/' + this.getAttribute('data-ci'), { method: 'DELETE' })
+            .then(function () { loadComments(); loadStats(); });
+        };
+      }
+    }).catch(function () { el.innerHTML = '<p style="color:#e51400;">ошибка загрузки</p>'; });
+  }
+
+  function loadBanwords() {
+    api('/api/admin/banwords').then(function (words) {
+      document.getElementById('banwords-text').value = words.join(', ');
+      document.getElementById('banwords-status').innerHTML = '';
+    }).catch(function () {});
+  }
+
+  document.getElementById('banwords-save').onclick = function () {
+    var raw = document.getElementById('banwords-text').value;
+    var words = raw.split(',').map(function (w) { return w.replace(/^\s+|\s+$/g, ''); }).filter(Boolean);
+    var btn = document.getElementById('banwords-save');
+    btn.disabled = true; btn.innerHTML = 'сохраняю...';
+    api('/api/admin/banwords', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ words: words }) })
+      .then(function () { btn.disabled = false; btn.innerHTML = 'сохранить'; document.getElementById('banwords-status').innerHTML = '✅ сохранено'; });
+  };
+
+  document.getElementById('post-search-btn').onclick = function () {
+    var q = document.getElementById('post-search').value.replace(/^\s+|\s+$/g, '');
+    var el = document.getElementById('posts-list');
+    if (!q) { loadPosts(); return; }
+    el.innerHTML = '<div class="loader">поиск...</div>';
+    api('/api/admin/search?q=' + encodeURIComponent(q)).then(function (posts) {
+      if (!posts.length) { el.innerHTML = '<p style="color:#666;">ничего не найдено</p>'; return; }
+      var html = '';
+      for (var i = 0; i < posts.length; i++) {
+        var p = posts[i];
+        html += '<div class="post-item"><div class="info"><div class="title">' + esc(p.title || 'без заголовка') + '</div>';
+        html += '<div class="meta">' + esc(p.text) + '… · ' + new Date(p.date).toLocaleDateString('ru') + ' · ❤ ' + p.likes + ' · 💬 ' + ((p.comments || []).length) + '</div></div>';
+        html += '<div class="post-actions">';
+        if (p.ip) html += '<button class="ban-btn sban-btn" data-ip="' + p.ip + '">IP</button>';
+        if (p.deviceId) html += '<button class="ban-btn sban-btn" data-device="' + p.deviceId + '">device</button>';
+        html += '<button class="del-btn" data-id="' + p.id + '">удалить</button></div></div>';
+      }
+      el.innerHTML = html;
+      var dbtns = el.querySelectorAll('.del-btn');
+      for (var di = 0; di < dbtns.length; di++) {
+        dbtns[di].onclick = function () {
+          if (!confirm('Удалить пост?')) return;
+          api('/api/admin/posts/' + this.getAttribute('data-id'), { method: 'DELETE' }).then(function () { document.getElementById('post-search').value = ''; loadPosts(); loadStats(); });
+        };
+      }
+      var sbans = el.querySelectorAll('.sban-btn');
+      for (var si = 0; si < sbans.length; si++) {
+        sbans[si].onclick = function () {
+          var ip = this.getAttribute('data-ip');
+          var device = this.getAttribute('data-device');
+          var until = Date.now() + 86400000;
+          if (ip) api('/api/admin/ban', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ip: ip, until: until }) }).then(function () { loadBans(); loadStats(); });
+          if (device) api('/api/admin/ban-device', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ deviceId: device, until: until }) }).then(function () { loadDeviceBans(); loadStats(); });
+        };
+      }
+    }).catch(function () { el.innerHTML = '<p style="color:#e51400;">ошибка поиска</p>'; });
+  };
+
+  function loadTOTPStatus() {
+    api('/api/admin/totp/status').then(function (d) {
+      var el = document.getElementById('totp-status');
+      if (d.enabled) {
+        el.innerHTML = '<p style="color:#6a6;">✅ TOTP включён</p><button class="danger-btn" id="btn-totp-disable" style="margin-top:8px;">отключить TOTP</button>';
+        document.getElementById('totp-setup-area').style.display = 'none';
+        document.getElementById('btn-totp-disable').onclick = function () {
+          if (!confirm('Отключить TOTP?')) return;
+          api('/api/admin/totp/disable', { method: 'POST' }).then(function () { loadTOTPStatus(); });
+        };
+      } else {
+        el.innerHTML = '<p style="color:#c44;">❌ TOTP выключен</p><button class="login-btn" id="btn-totp-setup" style="margin-top:8px;">настроить TOTP</button>';
+        document.getElementById('btn-totp-setup').onclick = function () {
+          api('/api/admin/totp/setup', { method: 'POST' }).then(function (d) {
+            document.getElementById('totp-setup-area').style.display = 'block';
+            document.getElementById('totp-qr-area').innerHTML = '<img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(d.uri) + '" alt="QR-код" style="border:4px solid #333;">';
+            document.getElementById('totp-secret-text').innerHTML = 'Ключ: ' + d.secret;
+            document.getElementById('totp-setup-btn').disabled = false;
+            document.getElementById('totp-setup-code').focus();
+          });
+        };
+      }
+    });
+  }
+
+  document.getElementById('totp-btn').onclick = doTOTP;
+  document.getElementById('totp-code').onkeydown = function (e) { e = e || window.event; if (e.keyCode === 13 || e.key === 'Enter') doTOTP(); };
+  document.getElementById('totp-setup-submit').onclick = function () { doTOTPSetupVerify(); };
+  document.getElementById('totp-setup-code-input').onkeydown = function (e) { e = e || window.event; if (e.keyCode === 13 || e.key === 'Enter') doTOTPSetupVerify(); };
+  document.getElementById('totp-setup-btn').onclick = function () {
+    var code = document.getElementById('totp-setup-code').value.replace(/^\s+|\s+$/g, '');
+    if (!code) return;
+    document.getElementById('totp-setup-btn').disabled = true;
+    api('/api/admin/totp/verify-setup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code: code }) })
+      .then(function () { loadTOTPStatus(); })
+      .catch(function () { document.getElementById('totp-setup-btn').disabled = false; });
+  };
+
+  // The admin.html includes script.js for polyfills (fetch, Promise, etc.)
+  // but we have our own inline versions. Load the polyfill script as well.
+})();
+</script>
+    <script src="/script.js"></script>
 </body>
 </html>

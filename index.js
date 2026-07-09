@@ -13,14 +13,20 @@ app.use(helmet({
     contentSecurityPolicy: {
         directives: {
             defaultSrc: ["'self'"],
-            scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
-            styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+            scriptSrc: ["'self'"],
+            styleSrc: ["'self'", "https://fonts.googleapis.com"],
             fontSrc: ["'self'", "https://fonts.gstatic.com"],
             imgSrc: ["'self'", "data:"],
             connectSrc: ["'self'", "https://metrorss.vercel.app"],
             frameAncestors: ["'none'"],
+            formAction: ["'none'"],
         },
     },
+    referrerPolicy: { policy: 'no-referrer' },
+    xContentTypeOptions: true,
+    xDnsPrefetchControl: { allow: false },
+    xDownloadOptions: true,
+    xPermittedCrossDomainPolicies: { permittedPolicies: 'none' },
 }));
 
 // Serve static files from public/
@@ -84,7 +90,7 @@ function sanitize(str) {
         .replace(/&lt;\/i&gt;/gi, '</i>')
         .replace(/&lt;p&gt;/gi, '<p>')
         .replace(/&lt;\/p&gt;/gi, '</p>')
-        .replace(/&lt;br\s*\/?&gt;/gi, '<br>');
+        .replace(/&lt;br ?\/?&gt;/gi, '<br>');
 }
 
 function escapeXml(str) {
@@ -268,7 +274,7 @@ async function isVPSIP(ip) {
     try {
         const ctrl = new AbortController();
         const timer = setTimeout(() => ctrl.abort(), 3000);
-        const res = await fetch('http://ip-api.com/json/' + ip + '?fields=hosting', { signal: ctrl.signal });
+        const res = await fetch('https://ip-api.com/json/' + ip + '?fields=hosting', { signal: ctrl.signal });
         clearTimeout(timer);
         if (!res.ok) return false;
         const data = await res.json();
@@ -447,6 +453,24 @@ app.use('/api/admin', (req, res, next) => {
     next();
 });
 
+// CSRF protection for mutating admin routes
+app.use('/api/admin', async (req, res, next) => {
+    if (req.method === 'GET' || req.method === 'HEAD' || req.method === 'OPTIONS') return next();
+    const csrf = req.headers['x-csrf-token'];
+    if (!csrf || csrf.length < 8 || csrf.length > 128) {
+        return res.status(403).json({ error: 'CSRF validation failed' });
+    }
+    const auth = req.headers.authorization;
+    if (auth && auth.startsWith('Bearer ')) {
+        const sessionToken = auth.slice(7);
+        try {
+            const session = await kv.get('session:' + sessionToken);
+            if (session && session.csrfToken === csrf) return next();
+        } catch (e) {}
+    }
+    return res.status(403).json({ error: 'CSRF validation failed' });
+});
+
 // --- ADMIN AUTH ROUTES (no session required) ---
 
 app.post('/api/admin/login', async (req, res) => {
@@ -456,14 +480,15 @@ app.post('/api/admin/login', async (req, res) => {
 
         const totpSecret = await kv.get('admin:totpSecret');
         const token = randomToken();
+        const csrfToken = randomToken();
 
         if (totpSecret) {
-            await kv.set('session:' + token, { ip, at: Date.now(), totpVerified: false }, { ex: 600 });
-            return res.json({ token, totpRequired: true });
+            await kv.set('session:' + token, { ip, at: Date.now(), totpVerified: false, csrfToken }, { ex: 600 });
+            return res.json({ token, csrfToken, totpRequired: true });
         }
 
-        await kv.set('session:' + token, { ip, at: Date.now(), totpVerified: false, setupMode: true }, { ex: 600 });
-        res.json({ token, totpSetupRequired: true });
+        await kv.set('session:' + token, { ip, at: Date.now(), totpVerified: false, setupMode: true, csrfToken }, { ex: 600 });
+        res.json({ token, csrfToken, totpSetupRequired: true });
     } catch (e) {
         res.status(500).json({ error: 'Login failed' });
     }
@@ -558,9 +583,13 @@ app.post('/api/admin/ban', adminAuth, async (req, res) => {
     try {
         const { ip, reason, until } = req.body;
         if (!ip || !net.isIP(ip)) return res.status(400).json({ error: 'Valid IP required' });
+        const safeReason = typeof reason === 'string' ? reason.substring(0, 200) : 'Manual ban';
         const blockedIPs = (await kv.get('blockedIPs')) || {};
-        const banUntil = (!until || until > Date.now() + 864000000) ? Date.now() + 86400000 : until;
-        blockedIPs[ip] = { reason: reason || 'Manual ban', until: banUntil, at: Date.now() };
+        const parsedUntil = parseInt(until);
+        const banUntil = isNaN(parsedUntil) || parsedUntil <= 0 || parsedUntil > Date.now() + 864000000
+            ? Date.now() + 86400000
+            : parsedUntil;
+        blockedIPs[ip] = { reason: safeReason, until: banUntil, at: Date.now() };
         await kv.set('blockedIPs', blockedIPs);
         res.json({ ok: true });
     } catch (e) {
@@ -594,9 +623,13 @@ app.post('/api/admin/ban-device', adminAuth, async (req, res) => {
     try {
         const { deviceId, reason, until } = req.body;
         if (!deviceId || typeof deviceId !== 'string') return res.status(400).json({ error: 'deviceId required' });
+        const safeReason = typeof reason === 'string' ? reason.substring(0, 200) : 'Manual ban';
         const blockedDevices = (await kv.get('blockedDevices')) || {};
-        const banUntil = (!until || until > Date.now() + 864000000) ? Date.now() + 86400000 : until;
-        blockedDevices[deviceId] = { reason: reason || 'Manual ban', until: banUntil, at: Date.now() };
+        const parsedUntil = parseInt(until);
+        const banUntil = isNaN(parsedUntil) || parsedUntil <= 0 || parsedUntil > Date.now() + 864000000
+            ? Date.now() + 86400000
+            : parsedUntil;
+        blockedDevices[deviceId] = { reason: safeReason, until: banUntil, at: Date.now() };
         await kv.set('blockedDevices', blockedDevices);
         res.json({ ok: true });
     } catch (e) {
@@ -662,7 +695,7 @@ app.post('/api/admin/banwords', adminAuth, async (req, res) => {
     try {
         const { words } = req.body;
         if (!Array.isArray(words)) return res.status(400).json({ error: 'Array expected' });
-        await kv.set('adminBanWords', words.map(w => w.toLowerCase().trim()).filter(Boolean));
+        await kv.set('adminBanWords', words.map(w => w.toLowerCase().trim()).filter(Boolean).slice(0, 200));
         res.json({ ok: true });
     } catch (e) { res.status(500).json({ error: 'Failed' }); }
 });
@@ -915,9 +948,34 @@ app.post('/api/posts/:id/comments', async (req, res) => {
     }
 });
 
-app.get('/rss', async (req, res) => {
+// RSS rate limiter
+const rssLimits = new Map();
+setInterval(() => {
+    const now = Date.now();
+    for (const [k, v] of rssLimits) {
+        if (now > v.resetAt) rssLimits.delete(k);
+    }
+}, 60000);
+
+function rssRateLimit(req, res, next) {
+    const ip = getClientIP(req);
+    const now = Date.now();
+    let entry = rssLimits.get(ip);
+    if (!entry || now > entry.resetAt) {
+        entry = { count: 0, resetAt: now + 60000 };
+        rssLimits.set(ip, entry);
+    }
+    entry.count++;
+    if (entry.count > 10) {
+        return res.status(429).json({ error: 'RSS rate limit exceeded' });
+    }
+    next();
+}
+
+app.get('/rss', rssRateLimit, async (req, res) => {
     try {
         const posts = await getPosts();
+        const rssPosts = posts.slice(0, 50);
         res.set('Content-Type', 'application/rss+xml; charset=utf-8');
         const siteLink = "https://metrorss.vercel.app";
         let rss = '<?xml version="1.0" encoding="UTF-8" ?>\n<rss version="2.0">\n<channel>\n';
@@ -925,7 +983,7 @@ app.get('/rss', async (req, res) => {
         rss += '<link>' + siteLink + '</link>\n';
         rss += '<description>Глобальный RSS поток пользователей MetroRSS</description>\n';
         rss += '<language>ru</language>\n';
-        for (const post of posts) {
+        for (const post of rssPosts) {
             rss += '<item>\n';
             rss += '  <title>' + escapeXml(post.title) + '</title>\n';
             rss += '  <link>' + siteLink + '</link>\n';
@@ -958,7 +1016,7 @@ app.post('/api/admin/totp/setup', adminAuth, async (req, res) => {
         if (await kv.get('admin:totpSecret')) {
             return res.status(400).json({ error: 'TOTP уже настроен' });
         }
-        const secret = speakeasy.generateSecret({ name: 'MetroRSS Admin', length: 20 });
+        const secret = speakeasy.generateSecret({ name: 'MetroRSS Admin', length: 32 });
         await kv.set('admin:totpPendingSecret', secret.base32, { ex: 300 });
         res.json({ secret: secret.base32, uri: secret.otpauth_url });
     } catch (e) {
